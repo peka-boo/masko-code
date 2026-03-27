@@ -73,6 +73,7 @@ final class OverlayManager {
 
     // Coalescing flag for HUD repositioning — prevents recursive layout cycles
     private var hudRepositionScheduled = false
+    private var isMovingScreen = false // Prevent recursive moveToActiveScreen() calls
 
     // Stores passed from AppStore for overlay display
     // Non-optional with defaults — avoids @Environment crash when overlay renders before stores are set
@@ -1101,6 +1102,7 @@ final class OverlayManager {
     }
 
     /// Re-apply window level, move to active screen, and bring to front without stealing focus.
+    @MainActor
     private func reassertPanel() {
         guard let panel else { return }
         moveToActiveScreen()
@@ -1119,8 +1121,12 @@ final class OverlayManager {
     /// Move all overlay panels to the screen with keyboard focus (NSScreen.main).
     /// Preserves the relative position (same percentage from edges) so the overlay
     /// appears in the equivalent spot on whichever screen the user is working on.
+    @MainActor
     private func moveToActiveScreen() {
-        guard let panel else { return }
+        guard let panel, !isMovingScreen else { return }
+        isMovingScreen = true
+        defer { isMovingScreen = false }
+
         let currentScreenFrame = panel.screen?.visibleFrame ?? .zero
         let activeScreenFrame = NSScreen.main?.visibleFrame ?? .zero
         guard activeScreenFrame.width > 0, activeScreenFrame.height > 0 else { return }
@@ -1343,7 +1349,7 @@ final class OverlayManager {
             object: targetPanel,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.savePosition() }
+            self?.savePosition()
         }
         workspaceObservers.append(moveObserver)
 

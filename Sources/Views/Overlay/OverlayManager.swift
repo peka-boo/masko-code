@@ -1100,9 +1100,10 @@ final class OverlayManager {
         }
     }
 
-    /// Re-apply window level and bring to front without stealing focus.
+    /// Re-apply window level, move to active screen, and bring to front without stealing focus.
     private func reassertPanel() {
         guard let panel else { return }
+        moveToActiveScreen()
         panel.level = .screenSaver
         panel.orderFrontRegardless()
         if let statsPanel {
@@ -1113,6 +1114,40 @@ final class OverlayManager {
             permissionPanel.level = .screenSaver
             permissionPanel.orderFrontRegardless()
         }
+    }
+
+    /// Move all overlay panels to the screen with keyboard focus (NSScreen.main).
+    /// Preserves the relative position (same percentage from edges) so the overlay
+    /// appears in the equivalent spot on whichever screen the user is working on.
+    private func moveToActiveScreen() {
+        guard let panel else { return }
+        let currentScreenFrame = panel.screen?.visibleFrame ?? .zero
+        let activeScreenFrame = NSScreen.main?.visibleFrame ?? .zero
+        guard activeScreenFrame.width > 0, activeScreenFrame.height > 0 else { return }
+
+        // Already on the active screen — no move needed
+        if panel.screen == NSScreen.main { return }
+
+        // Compute relative position on current screen (0...1 range)
+        let relX = currentScreenFrame.width > 0
+            ? (panel.frame.origin.x - currentScreenFrame.minX) / currentScreenFrame.width
+            : 0.8
+        let relY = currentScreenFrame.height > 0
+            ? (panel.frame.origin.y - currentScreenFrame.minY) / currentScreenFrame.height
+            : 0.1
+
+        // Map to same relative position on active screen
+        let side = CGFloat(currentSizePixels)
+        let newX = activeScreenFrame.minX + relX * (activeScreenFrame.width - side)
+        let newY = activeScreenFrame.minY + relY * (activeScreenFrame.height - side)
+        let clamped = Self.clampedMascotRect(
+            origin: CGPoint(x: newX, y: newY),
+            side: side,
+            screenFrame: activeScreenFrame
+        )
+        panel.setFrame(clamped, display: true, animate: false)
+        savePosition()
+        scheduleHUDReposition()
     }
 
     private func resizePanelToPixels(_ pixels: Int) {

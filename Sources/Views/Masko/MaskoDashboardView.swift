@@ -332,6 +332,10 @@ struct MaskoDashboardView: View {
         }
         .sheet(isPresented: $showingAddSheet) {
             addMascotSheet
+                .presentationDetents([.height(360)])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.clear)
+                .interactiveDismissDisabled(false)
         }
     }
 
@@ -522,8 +526,13 @@ struct MaskoDashboardView: View {
             .disabled(jsonText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(Constants.contentPaddingH)
-        .frame(width: 460, height: 320)
-        .background(Constants.lightBackground)
+        .frame(width: 480)
+        .background(Constants.surfaceWhite)
+        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                .stroke(Constants.border, lineWidth: 1)
+        )
     }
 
     // MARK: - Actions
@@ -723,6 +732,10 @@ struct MascotCard: View {
                 onSave: onSaveConfig,
                 isPresented: $showingJSON
             )
+            .presentationDetents([.height(520)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.clear)
+            .interactiveDismissDisabled(false)
         }
     }
 }
@@ -812,8 +825,13 @@ struct JSONEditorSheet: View {
                 )
         }
         .padding(Constants.contentPaddingH)
-        .frame(width: 560, height: 480)
+        .frame(width: 600)
         .background(Constants.lightBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                .stroke(Constants.border, lineWidth: 1)
+        )
     }
 
     private func saveJSON() {

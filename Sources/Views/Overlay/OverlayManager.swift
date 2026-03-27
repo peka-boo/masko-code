@@ -982,6 +982,11 @@ final class OverlayManager {
         newPanel.contentView = controller.view
         newPanel.contentViewController = controller
 
+        // Style as native macOS dark panel
+        newPanel.hasShadow = true
+        newPanel.backgroundColor = NSColor(Constants.surfaceWhite)
+        newPanel.isOpaque = true
+
         // Hide the bubble panels to avoid overlap (keep mascot visible)
         statsPanel?.orderOut(nil)
         permissionPanel?.orderOut(nil)
@@ -1202,7 +1207,7 @@ final class OverlayManager {
         }
 
         let mascotFrame = panel.frame
-        let screen = panel.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+        let screen = panel.screen?.visibleFrame ?? statsPanel?.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
         let gap: CGFloat = 4
         let statsTop = statsPanel?.frame.maxY ?? mascotFrame.maxY
 
@@ -1286,8 +1291,14 @@ final class OverlayManager {
 
     private func savePosition() {
         guard let panel else { return }
-        UserDefaults.standard.set(panel.frame.origin.x, forKey: "overlay_x")
-        UserDefaults.standard.set(panel.frame.origin.y, forKey: "overlay_y")
+        let frame = panel.frame
+        UserDefaults.standard.set(frame.origin.x, forKey: "overlay_x")
+        UserDefaults.standard.set(frame.origin.y, forKey: "overlay_y")
+        // Save screen identifier for multi-monitor support
+        if let screen = panel.screen {
+            UserDefaults.standard.set(screen.frame.origin.x, forKey: "overlay_screen_x")
+            UserDefaults.standard.set(screen.frame.origin.y, forKey: "overlay_screen_y")
+        }
     }
 
     private func setupObservers(for targetPanel: OverlayPanel) {
@@ -1320,6 +1331,36 @@ final class OverlayManager {
             Task { @MainActor in self?.reassertPanel() }
         }
         workspaceObservers.append(appObserver)
+
+        // Handle screen configuration changes (disconnected/added monitors)
+        let screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleScreenChange()
+            }
+        }
+        workspaceObservers.append(screenObserver)
+    }
+
+    private func handleScreenChange() {
+        guard let panel else { return }
+        let currentScreen = panel.screen ?? NSScreen.main
+        guard let screen = currentScreen?.visibleFrame else { return }
+        // If panel is off-screen after monitor change, reposition it
+        if !screen.intersects(panel.frame) {
+            let repaired = Self.clampedMascotRect(
+                origin: panel.frame.origin,
+                side: CGFloat(currentSizePixels),
+                screenFrame: screen
+            )
+            panel.setFrame(repaired, display: true, animate: true)
+            savePosition()
+            scheduleHUDReposition()
+            print("[masko-desktop] Repositioned overlay after screen change")
+        }
     }
 
     private func repairMascotPanelIfNeeded(_ mascotPanel: OverlayPanel) {
@@ -1342,13 +1383,27 @@ final class OverlayManager {
 
     static func startingMascotRect(savedX: Double, savedY: Double, sidePixels: Int, screenFrame: NSRect) -> NSRect {
         let side = max(CGFloat(sidePixels), minMascotSide)
+
+        // Try to find the original screen by saved position for multi-monitor support
+        var targetScreen = screenFrame
+        let savedScreenX = UserDefaults.standard.double(forKey: "overlay_screen_x")
+        let savedScreenY = UserDefaults.standard.double(forKey: "overlay_screen_y")
+        if savedScreenX != 0 || savedScreenY != 0 {
+            for screen in NSScreen.screens {
+                if abs(screen.frame.origin.x - savedScreenX) < 1 && abs(screen.frame.origin.y - savedScreenY) < 1 {
+                    targetScreen = screen.visibleFrame
+                    break
+                }
+            }
+        }
+
         let hasSavedOrigin = savedX > 0 || savedY > 0
         let fallbackOrigin = CGPoint(
-            x: screenFrame.maxX - side - defaultInset,
-            y: screenFrame.minY + defaultInset
+            x: targetScreen.maxX - side - defaultInset,
+            y: targetScreen.minY + defaultInset
         )
         let origin = hasSavedOrigin ? CGPoint(x: savedX, y: savedY) : fallbackOrigin
-        return clampedMascotRect(origin: origin, side: side, screenFrame: screenFrame)
+        return clampedMascotRect(origin: origin, side: side, screenFrame: targetScreen)
     }
 
     static func clampedMascotRect(origin: CGPoint, side: CGFloat, screenFrame: NSRect) -> NSRect {

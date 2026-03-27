@@ -95,6 +95,10 @@ struct ExpandedPermissionView: View {
         }
         .background(Constants.surfaceWhite)
         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                .stroke(Constants.border, lineWidth: 1)
+        )
         .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
     }
 

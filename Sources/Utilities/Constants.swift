@@ -31,60 +31,81 @@ enum Constants {
         UserDefaults.standard.set(Int(port), forKey: serverPortKey)
     }
 
-    // Brand colors — matches masko.ai web design
-    static let orangePrimary = Color(red: 249/255, green: 93/255, blue: 2/255)     // #f95d02
-    static let orangeHover = Color(red: 251/255, green: 121/255, blue: 16/255)     // #fb7910
-    static let orangeShadow = Color(red: 201/255, green: 74/255, blue: 1/255)      // #c94a01
-    static let textPrimary = Color(red: 35/255, green: 17/255, blue: 60/255)       // #23113c
-    static let textMuted = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.65)
-    static let lightBackground = Color(red: 250/255, green: 249/255, blue: 247/255) // #faf9f7
-    static let surfaceWhite = Color.white
-    static let border = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12)
-    static let borderHover = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.20)
+    // Brand colors — Electric Violet dark theme
+    static let orangePrimary = Color(red: 139/255, green: 92/255, blue: 246/255)      // #8B5CF6
+    static let orangeHover = Color(red: 167/255, green: 139/255, blue: 250/255)       // #A78BFA
+    static let orangeShadow = Color(red: 109/255, green: 40/255, blue: 217/255)       // #6D28D9
+    static let textPrimary = Color(red: 230/255, green: 237/255, blue: 243/255)       // #e6edf3
+    static let textMuted = Color(red: 125/255, green: 133/255, blue: 144/255)         // #7d8590
+    static let darkBackground = Color(red: 10/255, green: 10/255, blue: 15/255)       // #0a0a0f
+    static let lightBackground = darkBackground                                        // alias for compatibility
+    static let surfaceWhite = Color(red: 18/255, green: 18/255, blue: 26/255)         // #12121a
+    static let surfaceDark = Color(red: 10/255, green: 10/255, blue: 15/255)          // #0a0a0f
+    static let surfaceElevated = Color(red: 26/255, green: 26/255, blue: 36/255)      // #1a1a24
+    static let border = Color.white.opacity(0.08)                                      // subtle border
+    static let borderHover = Color.white.opacity(0.14)
 
-    // Interactive state colors (matches website sidebar)
-    static let chip = Color(red: 231/255, green: 173/255, blue: 104/255).opacity(0.18)       // warm hover bg
-    static let stage = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.04)          // subtle hover
-    static let orangePrimaryLight = Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.10)  // active item bg
-    static let orangePrimarySubtle = Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.08) // selected row bg
-    static let destructiveRed = Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255)         // #dc2626
+    // Interactive state colors
+    static let chip = Color(red: 139/255, green: 92/255, blue: 246/255).opacity(0.08)             // violet hover bg
+    static let stage = Color.white.opacity(0.03)                                                   // subtle hover
+    static let orangePrimaryLight = Color(red: 139/255, green: 92/255, blue: 246/255).opacity(0.12) // active item bg
+    static let orangePrimarySubtle = Color(red: 139/255, green: 92/255, blue: 246/255).opacity(0.08) // selected row bg
+    static let destructiveRed = Color(red: 248/255, green: 81/255, blue: 73/255)                   // #f85149
 
-    // MARK: - Typography
+    // MARK: - Typography (Apple HIG system fonts)
 
-    /// Fredoka — headings, buttons, display text
+    /// System font — headings, buttons, display text
     static func heading(size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        .custom("Fredoka", size: size).weight(weight)
+        .system(size: size, weight: weight, design: .default)
     }
 
-    /// Rubik — body text, labels, metadata
+    /// System font — body text, labels, metadata
     static func body(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom("Rubik", size: size).weight(weight)
+        .system(size: size, weight: weight, design: .default)
     }
 
-    // MARK: - Layout
+    // Named text styles following SF Pro sizing
+    static let fontTitle = Font.title2           // 17pt — section headers
+    static let fontHeadline = Font.headline       // 13pt semibold — card titles
+    static let fontBody = Font.body              // 13pt regular
+    static let fontCallout = Font.callout        // 12pt — secondary info
+    static let fontSubheadline = Font.subheadline // 11pt — badges, labels
+    static let fontFootnote = Font.footnote      // 10pt — timestamps, captions
 
-    static let cornerRadius: CGFloat = 14
-    static let cornerRadiusSmall: CGFloat = 10
+    // MARK: - Layout (macOS HIG corner radii)
 
-    // MARK: - Shadows
+    static let cornerRadius: CGFloat = 10       // cards, groups
+    static let cornerRadiusSmall: CGFloat = 6   // buttons, small cards
+    static let cornerRadiusTiny: CGFloat = 4    // badges, chips
+
+    // MARK: - Spacing (Apple 8pt grid)
+
+    static let spacingTight: CGFloat = 8        // between tightly related items
+    static let spacingNormal: CGFloat = 12      // standard item spacing
+    static let spacingLoose: CGFloat = 16       // relaxed spacing
+    static let spacingSection: CGFloat = 24     // section separators
+    static let contentPaddingH: CGFloat = 20    // horizontal content padding
+    static let contentPaddingV: CGFloat = 16    // vertical content padding
+
+    // MARK: - Shadows (subtle, macOS style)
 
     /// Default card shadow
-    static let cardShadowColor = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.08)
-    static let cardShadowRadius: CGFloat = 1.5
-    static let cardShadowY: CGFloat = 1
+    static let cardShadowColor = Color.black.opacity(0.25)
+    static let cardShadowRadius: CGFloat = 1
+    static let cardShadowY: CGFloat = 0.5
 
     /// Hover card shadow
-    static let cardHoverShadowColor = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12)
-    static let cardHoverShadowRadius: CGFloat = 6
-    static let cardHoverShadowY: CGFloat = 4
+    static let cardHoverShadowColor = Color.black.opacity(0.35)
+    static let cardHoverShadowRadius: CGFloat = 4
+    static let cardHoverShadowY: CGFloat = 2
 
     // MARK: - Gradients
 
-    /// Feature card orange tint gradient (matches web)
+    /// Feature card violet tint gradient
     static let featureCardGradient = LinearGradient(
         colors: [
-            Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.06),
-            Color(red: 252/255, green: 155/255, blue: 43/255).opacity(0.06)
+            Color(red: 139/255, green: 92/255, blue: 246/255).opacity(0.10),
+            Color(red: 167/255, green: 139/255, blue: 250/255).opacity(0.05)
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

@@ -68,12 +68,12 @@ struct SettingsView: View {
                     Button("Apply") { applyPort() }
                         .buttonStyle(.plain)
                         .foregroundColor(Constants.orangePrimary)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(Constants.fontCallout)
                 }
 
                 if let error = portError {
                     Text(error)
-                        .font(.system(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(.red)
                 }
 
@@ -85,7 +85,7 @@ struct SettingsView: View {
                     .foregroundColor(Constants.orangePrimary)
                 }
             } header: {
-                Text("Connection").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Connection").font(Constants.fontHeadline)
             }
 
             Section {
@@ -95,7 +95,7 @@ struct SettingsView: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(isHookEnabled ? Color.green : Color.gray.opacity(0.4))
+                            .fill(isHookEnabled ? Color.green : Constants.textMuted)
                             .frame(width: 8, height: 8)
                         Text(isHookEnabled ? "Enabled" : "Disabled")
                             .foregroundColor(Constants.textMuted)
@@ -104,13 +104,13 @@ struct SettingsView: View {
 
                 Button(action: toggleHooks) {
                     Text(isHookEnabled ? "Disable" : "Enable")
-                        .foregroundColor(isHookEnabled ? Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255) : Constants.orangePrimary)
+                        .foregroundColor(isHookEnabled ? Constants.destructiveRed : Constants.orangePrimary)
                 }
                 .buttonStyle(.plain)
 
                 if let error = hookError {
                     Text(error)
-                        .font(.system(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(.red)
                 }
 
@@ -139,7 +139,7 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Claude Code").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Claude Code").font(Constants.fontHeadline)
             }
 
             Section {
@@ -149,7 +149,7 @@ struct SettingsView: View {
                     Spacer()
                     HStack(spacing: 6) {
                         Circle()
-                            .fill(appStore.hotkeyManager.isActive ? Color.green : Color.gray.opacity(0.4))
+                            .fill(appStore.hotkeyManager.isActive ? Color.green : Constants.textMuted)
                             .frame(width: 8, height: 8)
                         Text(appStore.hotkeyManager.isActive ? "Active" : "Needs Accessibility")
                             .foregroundColor(Constants.textMuted)
@@ -177,7 +177,7 @@ struct SettingsView: View {
                     .foregroundColor(Constants.orangePrimary)
                 }
             } header: {
-                Text("Keyboard Shortcuts").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Keyboard Shortcuts").font(Constants.fontHeadline)
             }
 
             Section {
@@ -204,7 +204,7 @@ struct SettingsView: View {
                                     installExtension(command: ide.command)
                                 } label: {
                                     Text("Install")
-                                        .font(Constants.heading(size: 11, weight: .semibold))
+                                        .font(Constants.fontSubheadline)
                                         .foregroundColor(.white)
                                         .padding(.horizontal, 10)
                                         .padding(.vertical, 3)
@@ -218,7 +218,7 @@ struct SettingsView: View {
                                 .foregroundColor(Constants.textMuted.opacity(0.5))
                         }
                     }
-                    .font(.system(size: 13))
+                    .font(Constants.fontBody)
                 }
 
                 // Actions
@@ -228,7 +228,7 @@ struct SettingsView: View {
                         ProgressView()
                             .controlSize(.small)
                         Text("Installing...")
-                            .font(.system(size: 12))
+                            .font(Constants.fontCallout)
                             .foregroundColor(Constants.textMuted)
                         Spacer()
                     }
@@ -243,21 +243,21 @@ struct SettingsView: View {
                         .buttonStyle(.plain)
                         Button(action: uninstallExtension) {
                             Text("Uninstall")
-                                .foregroundColor(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
+                                .foregroundColor(Constants.destructiveRed)
                         }
                         .buttonStyle(.plain)
                     }
                 } else if ideStatuses.contains(where: { $0.isDetected }) {
                     Text("Install the extension to jump to the exact terminal tab running Claude Code.")
-                        .font(.system(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                 }
 
                 if let error = extensionError {
-                    Text(error).font(.system(size: 11)).foregroundColor(.red)
+                    Text(error).font(Constants.fontSubheadline).foregroundColor(.red)
                 }
             } header: {
-                Text("IDE Integration").font(Constants.heading(size: 13, weight: .semibold))
+                Text("IDE Integration").font(Constants.fontHeadline)
             }
             .animation(.easeInOut(duration: 0.25), value: ideExtensionInstalled)
             .animation(.easeInOut(duration: 0.25), value: extensionBusy)
@@ -303,13 +303,13 @@ struct SettingsView: View {
                         .foregroundColor(Constants.textPrimary)
                     Spacer()
                     Text(LocalStorage.appSupportDir.path)
-                        .font(.system(size: 10))
+                        .font(Constants.fontFootnote)
                         .foregroundColor(Constants.textMuted)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
             } header: {
-                Text("Storage").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Storage").font(Constants.fontHeadline)
             }
 
             Section {
@@ -326,11 +326,11 @@ struct SettingsView: View {
                     .disabled(!appUpdater.canCheckForUpdates)
                 } else {
                     Text("Updates unavailable (unsigned build)")
-                        .font(.system(size: 12))
+                        .font(Constants.fontCallout)
                         .foregroundColor(Constants.textMuted)
                 }
             } header: {
-                Text("Updates").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Updates").font(Constants.fontHeadline)
             }
 
             Section {
@@ -365,7 +365,7 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("About").font(Constants.heading(size: 13, weight: .semibold))
+                Text("About").font(Constants.fontHeadline)
             }
 
             Section {
@@ -374,20 +374,20 @@ struct SettingsView: View {
                         Image(systemName: "trash")
                         Text("Uninstall Masko")
                     }
-                    .foregroundColor(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
+                    .foregroundColor(Constants.destructiveRed)
                 }
                 .buttonStyle(.plain)
 
                 Text("Removes Claude Code hooks, local data, and quits the app.")
-                    .font(.system(size: 11))
+                    .font(Constants.fontSubheadline)
                     .foregroundColor(Constants.textMuted)
             } header: {
-                Text("Uninstall").font(Constants.heading(size: 13, weight: .semibold))
+                Text("Uninstall").font(Constants.fontHeadline)
             }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .background(Constants.lightBackground)
+        .background(Constants.darkBackground)
         .navigationTitle("Settings")
         .task {
             // Fast, synchronous — safe on main thread
@@ -575,14 +575,14 @@ struct SettingsView: View {
     private func shortcutRow(_ shortcut: String, _ description: String) -> some View {
         HStack(spacing: 8) {
             Text(shortcut)
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .font(Constants.fontSubheadline)
                 .foregroundColor(Constants.textPrimary)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(Constants.textMuted.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusTiny))
             Text(description)
-                .font(.system(size: 11))
+                .font(Constants.fontSubheadline)
                 .foregroundColor(Constants.textMuted)
         }
     }
@@ -607,20 +607,20 @@ struct ShortcutRecorderView: View {
             HStack(spacing: 4) {
                 if isRecording {
                     Text("Press shortcut...")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.orangePrimary)
                 } else {
                     Text(hotkeyManager.shortcutLabel)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textPrimary)
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Constants.spacingTight)
             .padding(.vertical, 4)
             .background(isRecording ? Constants.orangePrimary.opacity(0.08) : Constants.textMuted.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
                     .stroke(isRecording ? Constants.orangePrimary.opacity(0.4) : Color.clear, lineWidth: 1)
             )
         }

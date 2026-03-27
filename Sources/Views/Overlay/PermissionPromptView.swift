@@ -4,20 +4,20 @@ import AppKit
 // MARK: - Overlay style constants (Speech Bubble + Tight Crisp Shadow)
 
 enum OverlayStyle {
-    static let cardBg = Color.white
-    static let cardShadow = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.22)
-    static let codeBg = Color(red: 250/255, green: 249/255, blue: 247/255)  // #faf9f7
-    static let codeBorder = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.06)
-    static let textPrimary = Color(red: 35/255, green: 17/255, blue: 60/255)
-    static let textMuted = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.55)
-    static let textHint = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.30)
-    static let orange = Color(red: 249/255, green: 93/255, blue: 2/255)
-    static let orangeBorder = Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.25)
-    static let selectedBg = Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.06)
-    static let denyBorder = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12)
-    static let denyText = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.50)
-    static let radioBorder = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.20)
-    static let inputBg = Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.04)
+    static let cardBg = Constants.surfaceWhite
+    static let cardShadow = Constants.textPrimary.opacity(0.22)
+    static let codeBg = Constants.surfaceDark
+    static let codeBorder = Constants.border
+    static let textPrimary = Constants.textPrimary
+    static let textMuted = Constants.textMuted
+    static let textHint = Constants.textMuted.opacity(0.7)
+    static let orange = Constants.orangePrimary
+    static let orangeBorder = Constants.orangePrimary.opacity(0.3)
+    static let selectedBg = Constants.orangePrimaryLight
+    static let denyBorder = Constants.destructiveRed.opacity(0.3)
+    static let denyText = Constants.destructiveRed
+    static let radioBorder = Constants.border
+    static let inputBg = Constants.surfaceElevated
 
     static let tailHeight: CGFloat = 8
 }
@@ -67,7 +67,7 @@ private struct SpeechBubbleShape: Shape {
     var tailSide: TailSide = .bottom
     var tailPercent: CGFloat = 0.80
 
-    private let r: CGFloat = 14
+    private let r: CGFloat = Constants.cornerRadius
     private let tailH: CGFloat = OverlayStyle.tailHeight
     private let tailW: CGFloat = 14
 
@@ -297,7 +297,7 @@ struct AskUserQuestionView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(OverlayStyle.orange)
                 Text("Question")
-                    .font(Constants.heading(size: 11, weight: .bold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.textPrimary)
 
                 Spacer()
@@ -365,14 +365,14 @@ struct AskUserQuestionView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("Submit")
-                            .font(Constants.heading(size: 11, weight: .semibold))
+                            .font(Constants.fontSubheadline)
                             .foregroundStyle(.white)
                         if showShortcuts { ActionBadge(label: "⌘↩") }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
-                    .background(allAnswered ? OverlayStyle.orange : Color.gray.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(allAnswered ? OverlayStyle.orange : Constants.border)
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
                 .disabled(!allAnswered)
@@ -382,15 +382,15 @@ struct AskUserQuestionView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("Skip")
-                            .font(Constants.heading(size: 11, weight: .semibold))
+                            .font(Constants.fontSubheadline)
                             .foregroundStyle(OverlayStyle.denyText)
                         if showShortcuts { ActionBadge(label: "⌘⎋") }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
                     .contentShape(Rectangle())
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -452,7 +452,7 @@ struct AskUserQuestionView: View {
         VStack(alignment: .leading, spacing: 3) {
             if let header = question.header {
                 Text(header)
-                    .font(Constants.heading(size: 10, weight: .bold))
+                    .font(Constants.fontFootnote)
                     .foregroundStyle(OverlayStyle.orange)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
@@ -460,7 +460,7 @@ struct AskUserQuestionView: View {
             }
 
             markdownText(question.question)
-                .font(Constants.body(size: 11, weight: .medium))
+                .font(Constants.fontSubheadline)
                 .foregroundStyle(OverlayStyle.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentShape(Rectangle())
@@ -517,13 +517,13 @@ struct AskUserQuestionView: View {
 
                 VStack(alignment: .leading, spacing: 1) {
                     markdownText(option.label)
-                        .font(Constants.body(size: 11, weight: .medium))
+                        .font(Constants.fontSubheadline)
                         .foregroundStyle(OverlayStyle.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let desc = option.description, !desc.isEmpty {
                         markdownText(desc)
-                            .font(Constants.body(size: 9))
+                            .font(.system(size: 9))
                             .foregroundStyle(OverlayStyle.textMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -535,7 +535,7 @@ struct AskUserQuestionView: View {
                     ShortcutBadge(index: index, isSelected: hotkeyManager.selectedButtonIndex == index)
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.vertical, Constants.spacingTight)
             .padding(.horizontal, 5)
             .background(
                 (hotkeyManager.selectedButtonIndex == index && showBadge)
@@ -543,7 +543,7 @@ struct AskUserQuestionView: View {
                     : (isSelected ? OverlayStyle.selectedBg : Color.clear)
             )
             .contentShape(Rectangle())
-            .clipShape(RoundedRectangle(cornerRadius: 7))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
         }
         .buttonStyle(.plain)
     }
@@ -569,7 +569,7 @@ struct AskUserQuestionView: View {
                         .frame(width: 13)
 
                     Text("Other")
-                        .font(Constants.body(size: 11, weight: .medium))
+                        .font(Constants.fontSubheadline)
                         .foregroundStyle(OverlayStyle.textMuted)
 
                     Spacer(minLength: 0)
@@ -578,7 +578,7 @@ struct AskUserQuestionView: View {
                         ShortcutBadge(index: otherIndex, isSelected: hotkeyManager.selectedButtonIndex == otherIndex)
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, Constants.spacingTight)
                 .padding(.horizontal, 5)
                 .background(
                     (hotkeyManager.selectedButtonIndex == otherIndex && showBadge)
@@ -586,7 +586,7 @@ struct AskUserQuestionView: View {
                         : (isCustom ? OverlayStyle.selectedBg : Color.clear)
                 )
                 .contentShape(Rectangle())
-                .clipShape(RoundedRectangle(cornerRadius: 7))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
 
@@ -601,7 +601,7 @@ struct AskUserQuestionView: View {
                 .foregroundStyle(OverlayStyle.textPrimary)
                 .padding(3)
                 .background(OverlayStyle.inputBg)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .padding(.leading, 22)
             }
         }
@@ -644,7 +644,7 @@ struct ExitPlanModeView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(OverlayStyle.orange)
                 Text("Plan Ready")
-                    .font(Constants.heading(size: 11, weight: .bold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.textPrimary)
 
                 Spacer()
@@ -699,8 +699,8 @@ struct ExitPlanModeView: View {
                     .frame(maxHeight: 120)
                     .padding(5)
                     .background(OverlayStyle.codeBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                     .contentShape(Rectangle())
                     .onTapGesture { isExpanded = false }
 
@@ -719,8 +719,8 @@ struct ExitPlanModeView: View {
                         .padding(5)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(OverlayStyle.codeBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
-                        .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                        .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                         .contentShape(Rectangle())
                         .onTapGesture { isExpanded = true }
 
@@ -751,7 +751,7 @@ struct ExitPlanModeView: View {
                                 .frame(width: 13)
 
                             Text(label)
-                                .font(Constants.body(size: 11, weight: .medium))
+                                .font(Constants.fontSubheadline)
                                 .foregroundStyle(OverlayStyle.textPrimary)
 
                             Spacer(minLength: 0)
@@ -760,7 +760,7 @@ struct ExitPlanModeView: View {
                                 ShortcutBadge(index: idx, isSelected: hotkeyManager.selectedButtonIndex == idx)
                             }
                         }
-                        .padding(.vertical, 2)
+                        .padding(.vertical, Constants.spacingTight)
                         .padding(.horizontal, 5)
                         .background(
                             (hotkeyManager.selectedButtonIndex == idx && showShortcuts)
@@ -768,7 +768,7 @@ struct ExitPlanModeView: View {
                                 : (selectedOption == idx ? OverlayStyle.selectedBg : Color.clear)
                         )
                         .contentShape(Rectangle())
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     }
                     .buttonStyle(.plain)
                 }
@@ -781,7 +781,7 @@ struct ExitPlanModeView: View {
                         .foregroundStyle(OverlayStyle.textPrimary)
                         .padding(3)
                         .background(OverlayStyle.inputBg)
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                         .padding(.leading, 22)
                 }
             }
@@ -802,7 +802,7 @@ struct ExitPlanModeView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("Approve")
-                            .font(Constants.heading(size: 11, weight: .semibold))
+                            .font(Constants.fontSubheadline)
                             .foregroundStyle(.white)
                         if showShortcuts { ActionBadge(label: "⌘↩") }
                     }
@@ -810,10 +810,10 @@ struct ExitPlanModeView: View {
                     .padding(.vertical, 4)
                     .background(
                         (selectedOption == 3 && feedbackText.isEmpty)
-                            ? Color.gray.opacity(0.3)
+                            ? Constants.border
                             : OverlayStyle.orange
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
                 .disabled(selectedOption == 3 && feedbackText.isEmpty)
@@ -823,15 +823,15 @@ struct ExitPlanModeView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("Deny")
-                            .font(Constants.heading(size: 11, weight: .semibold))
+                            .font(Constants.fontSubheadline)
                             .foregroundStyle(OverlayStyle.denyText)
                         if showShortcuts { ActionBadge(label: "⌘⎋") }
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
                     .contentShape(Rectangle())
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -924,8 +924,8 @@ struct PermissionPromptView: View {
         VStack(alignment: .leading, spacing: 6) {
             // Header: tool name + terminal + later button
             HStack {
-                Text(permission.toolName)
-                    .font(Constants.heading(size: 11, weight: .bold))
+                    Text(permission.toolName)
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.orange)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
@@ -982,8 +982,8 @@ struct PermissionPromptView: View {
                 .frame(maxHeight: 250)
                 .padding(5)
                 .background(OverlayStyle.codeBg)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                 .contentShape(Rectangle())
                 .onTapGesture { isExpanded = false }
 
@@ -998,8 +998,8 @@ struct PermissionPromptView: View {
                     .padding(5)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(OverlayStyle.codeBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                     .contentShape(Rectangle())
                     .onTapGesture { isExpanded = true }
             }
@@ -1015,14 +1015,14 @@ struct PermissionPromptView: View {
                         HStack(spacing: 4) {
                             Spacer(minLength: 0)
                             Text("Allow")
-                                .font(Constants.heading(size: 11, weight: .semibold))
+                                .font(Constants.fontSubheadline)
                                 .foregroundStyle(.white)
                             if showShortcuts { ActionBadge(label: "⌘↩") }
                             Spacer(minLength: 0)
                         }
                         .padding(.vertical, 4)
                         .background(OverlayStyle.orange)
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     }
                     .buttonStyle(.plain)
 
@@ -1032,15 +1032,15 @@ struct PermissionPromptView: View {
                         HStack(spacing: 4) {
                             Spacer(minLength: 0)
                             Text("Deny")
-                                .font(Constants.heading(size: 11, weight: .semibold))
+                                .font(Constants.fontSubheadline)
                                 .foregroundStyle(OverlayStyle.denyText)
                             if showShortcuts { ActionBadge(label: "⌘⎋") }
                             Spacer(minLength: 0)
                         }
                         .padding(.vertical, 4)
                         .contentShape(Rectangle())
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
-                        .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                        .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -1053,7 +1053,7 @@ struct PermissionPromptView: View {
                         HStack(spacing: 4) {
                             Spacer(minLength: 0)
                             Text(suggestion.displayLabel)
-                                .font(Constants.body(size: 10, weight: .medium))
+                                .font(Constants.fontCallout)
                                 .foregroundStyle(OverlayStyle.denyText)
                             if showShortcuts {
                                 ShortcutBadge(index: sugIndex, isSelected: hotkeyManager.selectedButtonIndex == sugIndex)
@@ -1066,8 +1066,8 @@ struct PermissionPromptView: View {
                                 ? OverlayStyle.orange.opacity(0.08)
                                 : Color.clear
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
-                        .overlay(RoundedRectangle(cornerRadius: 7).stroke(
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                        .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(
                             (hotkeyManager.selectedButtonIndex == sugIndex && showShortcuts)
                                 ? OverlayStyle.orange
                                 : OverlayStyle.denyBorder,
@@ -1126,7 +1126,7 @@ private struct CollapsedPermissionPill: View {
                 .foregroundStyle(OverlayStyle.orange)
 
             Text(permission.toolName)
-                .font(Constants.heading(size: 10, weight: .bold))
+                .font(Constants.fontFootnote)
                 .foregroundStyle(OverlayStyle.textPrimary)
 
             Text(permission.toolInputPreview)
@@ -1167,44 +1167,44 @@ private struct CollapsedPermissionPill: View {
                         Image(systemName: "terminal.fill")
                             .font(.system(size: 8))
                         Text("Open Terminal")
-                            .font(Constants.heading(size: 9, weight: .semibold))
+                            .font(Constants.fontFootnote)
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(OverlayStyle.orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusTiny))
                 }
                 .buttonStyle(.plain)
             } else {
                 Button { onAllow() } label: {
                     Text("Allow")
-                        .font(Constants.heading(size: 9, weight: .semibold))
+                        .font(Constants.fontFootnote)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(OverlayStyle.orange)
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusTiny))
                 }
                 .buttonStyle(.plain)
 
                 Button { onDeny() } label: {
                     Text("Deny")
-                        .font(Constants.heading(size: 9, weight: .semibold))
+                        .font(Constants.fontFootnote)
                         .foregroundStyle(OverlayStyle.denyText)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .contentShape(Rectangle())
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
-                        .overlay(RoundedRectangle(cornerRadius: 5).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusTiny))
+                        .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusTiny).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Constants.spacingTight)
         .padding(.vertical, 5)
         .background(OverlayStyle.cardBg)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
         .shadow(color: OverlayStyle.cardShadow, radius: 2, x: 0, y: 1)
         .contentShape(Rectangle())
         .onTapGesture { onExpand() }
@@ -1248,7 +1248,7 @@ struct PermissionStackView: View {
                 if pendingPermissionStore.pending.count > 1 && canBulkResolve {
                     HStack(spacing: 6) {
                         Text("\(pendingPermissionStore.pending.count) pending")
-                            .font(Constants.body(size: 10, weight: .medium))
+                            .font(Constants.fontCallout)
                             .foregroundStyle(OverlayStyle.textMuted)
 
                         Spacer()
@@ -1257,7 +1257,7 @@ struct PermissionStackView: View {
                             pendingPermissionStore.resolveAll(decision: .allow)
                         } label: {
                             Text("Allow All")
-                                .font(Constants.heading(size: 10, weight: .semibold))
+                                .font(Constants.fontFootnote)
                                 .foregroundStyle(OverlayStyle.orange)
                                 .padding(.horizontal, 4)
                                 .padding(.vertical, 2)
@@ -1269,7 +1269,7 @@ struct PermissionStackView: View {
                             pendingPermissionStore.resolveAll(decision: .deny)
                         } label: {
                             Text("Deny All")
-                                .font(Constants.heading(size: 10, weight: .semibold))
+                                .font(Constants.fontFootnote)
                                 .foregroundStyle(.red)
                                 .padding(.horizontal, 4)
                                 .padding(.vertical, 2)
@@ -1277,7 +1277,7 @@ struct PermissionStackView: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, Constants.spacingTight)
                     .padding(.vertical, 3)
                 }
 
@@ -1355,7 +1355,7 @@ struct DialogScalePreview: View {
                     .font(.system(size: 11))
                     .foregroundStyle(OverlayStyle.orange)
                 Text("Bash")
-                    .font(Constants.heading(size: 11, weight: .bold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.textPrimary)
                 Spacer()
             }
@@ -1367,26 +1367,26 @@ struct DialogScalePreview: View {
                 .padding(6)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(OverlayStyle.codeBg)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(RoundedRectangle(cornerRadius: 6).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
 
             // Fake buttons
             HStack(spacing: 4) {
                 Text("Allow")
-                    .font(Constants.heading(size: 11, weight: .semibold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
                     .background(OverlayStyle.orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
 
                 Text("Deny")
-                    .font(Constants.heading(size: 11, weight: .semibold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.denyText)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 4)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
             }
         }
         .padding(8)

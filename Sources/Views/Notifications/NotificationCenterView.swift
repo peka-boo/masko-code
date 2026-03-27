@@ -13,14 +13,14 @@ struct NotificationCenterView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("Notifications")
-                    .font(Constants.heading(size: 22, weight: .semibold))
+                    .font(Constants.fontTitle)
                     .foregroundColor(Constants.textPrimary)
                 Spacer()
                 Button("Mark All Read") {
                     appStore.notificationStore.markAllAsRead()
                 }
                 .buttonStyle(.plain)
-                .font(Constants.body(size: 13, weight: .medium))
+                .font(Constants.fontBody)
                 .foregroundColor(hasUnread ? Constants.orangePrimary : Constants.textMuted)
                 .disabled(!hasUnread)
 
@@ -28,12 +28,12 @@ struct NotificationCenterView: View {
                     showClearAllConfirmation = true
                 }
                 .buttonStyle(.plain)
-                .font(Constants.body(size: 13, weight: .medium))
+                .font(Constants.fontBody)
                 .foregroundColor(isEmpty ? Constants.textMuted : Constants.destructiveRed)
                 .disabled(isEmpty)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, Constants.contentPaddingH)
+            .padding(.vertical, Constants.spacingNormal)
 
             Divider().overlay(Constants.border)
 
@@ -44,15 +44,15 @@ struct NotificationCenterView: View {
                         .font(.system(size: 36))
                         .foregroundColor(Constants.textMuted)
                     Text("No Notifications")
-                        .font(Constants.heading(size: 22, weight: .semibold))
+                        .font(Constants.fontTitle)
                         .foregroundColor(Constants.textPrimary)
                     Text("Notifications from Claude Code and Codex will appear here")
-                        .font(Constants.body(size: 14))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Constants.lightBackground)
+                .background(Constants.darkBackground)
             } else {
                 List(appStore.notificationStore.notifications) { notification in
                     NotificationRow(notification: notification)
@@ -62,10 +62,10 @@ struct NotificationCenterView: View {
                 }
                 .listStyle(.inset)
                 .scrollContentBackground(.hidden)
-                .background(Constants.lightBackground)
+                .background(Constants.darkBackground)
             }
         }
-        .background(Constants.lightBackground)
+        .background(Constants.darkBackground)
         .overlay {
             if showClearAllConfirmation {
                 ClearAllConfirmationDialog(
@@ -90,7 +90,7 @@ private struct ClearAllConfirmationDialog: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.3)
+            Color.white.opacity(0.08)
                 .ignoresSafeArea()
                 .onTapGesture { onCancel() }
 
@@ -100,44 +100,44 @@ private struct ClearAllConfirmationDialog: View {
                     .foregroundColor(Constants.destructiveRed)
 
                 Text("Clear All Notifications")
-                    .font(Constants.heading(size: 16, weight: .semibold))
+                    .font(Constants.fontTitle)
                     .foregroundColor(Constants.textPrimary)
 
                 Text("This will permanently delete all notifications.")
-                    .font(Constants.body(size: 13))
+                    .font(Constants.fontBody)
                     .foregroundColor(Constants.textMuted)
                     .multilineTextAlignment(.center)
 
                 HStack(spacing: 12) {
                     Button("Cancel") { onCancel() }
                         .buttonStyle(.plain)
-                        .font(Constants.body(size: 13, weight: .medium))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Constants.spacingTight)
                         .background(
-                            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                            RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
                                 .stroke(Constants.border, lineWidth: 1)
                         )
 
                     Button("Clear All") { onConfirm() }
                         .buttonStyle(.plain)
-                        .font(Constants.body(size: 13, weight: .medium))
+                        .font(Constants.fontBody)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Constants.spacingTight)
                         .background(
-                            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                            RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
                                 .fill(Constants.destructiveRed)
                         )
                 }
             }
-            .padding(24)
+            .padding(Constants.spacingSection)
             .frame(width: 320)
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Constants.surfaceWhite)
-                    .shadow(color: .black.opacity(0.15), radius: 20, y: 8)
+                    .shadow(color: Color.white.opacity(0.08), radius: 20, y: 8)
             )
         }
     }
@@ -156,13 +156,13 @@ struct NotificationRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(notification.title)
                     .font(notification.isRead
-                        ? Constants.body(size: compact ? 11 : 14)
-                        : Constants.heading(size: compact ? 11 : 14, weight: .semibold))
+                        ? Constants.fontSubheadline
+                        : Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
 
                 if let body = notification.body {
                     Text(body)
-                        .font(Constants.body(size: compact ? 10 : 13))
+                        .font(Constants.fontFootnote)
                         .foregroundColor(Constants.textMuted)
                         .lineLimit(compact ? 1 : 2)
                 }
@@ -170,8 +170,8 @@ struct NotificationRow: View {
                 if !compact {
                     HStack {
                         Text(notification.category.rawValue.replacingOccurrences(of: "_", with: " ").capitalized)
-                            .font(Constants.body(size: 11, weight: .medium))
-                            .foregroundColor(Color(red: 180/255, green: 90/255, blue: 0))
+                            .font(Constants.fontSubheadline)
+                            .foregroundColor(Constants.orangePrimary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
                             .background(Constants.chip, in: Capsule())
@@ -179,7 +179,7 @@ struct NotificationRow: View {
                         Spacer()
 
                         Text(relativeTimeString(from: notification.createdAt))
-                            .font(Constants.body(size: 11))
+                            .font(Constants.fontSubheadline)
                             .foregroundColor(Constants.textMuted)
                     }
                 }

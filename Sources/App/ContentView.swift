@@ -39,7 +39,7 @@ struct ContentView: View {
 
     private var dashboardView: some View {
         NavigationSplitView {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: Constants.spacingTight) {
                 HStack(spacing: 8) {
                     if let url = Bundle.module.url(forResource: "logo", withExtension: "png", subdirectory: "Images"),
                        let nsImage = NSImage(contentsOf: url) {
@@ -49,12 +49,12 @@ struct ContentView: View {
                             .frame(width: 24, height: 24)
                     }
                     Text("Masko Code")
-                        .font(Constants.heading(size: 16, weight: .bold))
+                        .font(Constants.fontTitle)
                         .foregroundColor(Constants.textPrimary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+                .padding(.horizontal, Constants.contentPaddingH)
+                .padding(.top, Constants.spacingNormal)
+                .padding(.bottom, Constants.spacingTight)
 
                 ForEach(SidebarSection.allCases, id: \.self) { section in
                     SidebarNavItem(
@@ -68,11 +68,11 @@ struct ContentView: View {
 
                 Spacer()
             }
-            .padding(.horizontal, 8)
-            .background(Constants.surfaceWhite)
+            .padding(.horizontal, 10)
+            .background(Constants.surfaceDark)
             .navigationTitle("")
             .toolbar(.hidden, for: .automatic)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+            .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 240)
         } detail: {
             switch selectedSection {
             case .activityFeed: ActivityFeedView()
@@ -83,7 +83,7 @@ struct ContentView: View {
             case .settings: SettingsView()
             }
         }
-        .background(Constants.lightBackground)
+        .background(Constants.surfaceElevated)
         .onChange(of: appStore.navigateToMascotId) { _, newId in
             if newId != nil {
                 selectedSection = .masko
@@ -117,24 +117,24 @@ private struct SidebarNavItem: View {
                     .frame(width: 20)
 
                 Text(section.rawValue)
-                    .font(Constants.body(size: 14, weight: .medium))
+                    .font(Constants.fontBody)
 
                 Spacer()
 
                 if badge > 0 {
                     Text("\(badge)")
-                        .font(Constants.body(size: 11, weight: .semibold))
-                        .foregroundColor(Color(red: 180/255, green: 90/255, blue: 0))
+                        .font(Constants.fontSubheadline)
+                        .foregroundColor(Constants.orangePrimary)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 1)
                         .background(Constants.chip, in: Capsule())
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
+            .padding(.horizontal, Constants.spacingNormal)
+            .padding(.vertical, 7)
             .foregroundColor(isSelected ? Constants.orangePrimary : (isHovered ? Constants.textPrimary : Constants.textMuted))
             .background(
-                RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
                     .fill(isSelected ? Constants.orangePrimaryLight : (isHovered ? Constants.chip : Color.clear))
             )
         }

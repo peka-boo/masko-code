@@ -34,7 +34,7 @@ struct ActivityFeedView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.vertical, Constants.spacingTight)
             .background(Constants.surfaceWhite)
 
             Divider().overlay(Constants.border)
@@ -46,10 +46,10 @@ struct ActivityFeedView: View {
                         .font(.system(size: 36))
                         .foregroundColor(Constants.textMuted)
                     Text("No Events")
-                        .font(Constants.heading(size: 22, weight: .semibold))
+                        .font(Constants.fontTitle.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     Text("Claude Code and Codex events will appear here in real-time")
-                        .font(Constants.body(size: 14))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                     Spacer()
                 }
@@ -97,11 +97,11 @@ struct EventRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(event.eventType?.displayName ?? event.hookEventName)
-                        .font(Constants.heading(size: 14, weight: .semibold))
+                        .font(Constants.fontHeadline.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     if let toolName = event.toolName {
                         Text(toolName)
-                            .font(Constants.body(size: 12))
+                            .font(Constants.fontBody)
                             .foregroundColor(Constants.orangePrimary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
@@ -109,7 +109,7 @@ struct EventRow: View {
                     }
                     if let notificationType = event.notificationType {
                         Text(notificationType)
-                            .font(Constants.body(size: 12))
+                            .font(Constants.fontBody)
                             .foregroundColor(Constants.orangePrimary)
                     }
                 }
@@ -117,12 +117,12 @@ struct EventRow: View {
                 HStack {
                     if let projectName = event.projectName {
                         Text(projectName)
-                            .font(Constants.body(size: 11))
+                            .font(Constants.fontSubheadline)
                             .foregroundColor(Constants.textMuted)
                     }
                     Spacer()
                     Text(relativeTimeString(from: event.receivedAt))
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                 }
             }
@@ -135,9 +135,9 @@ struct EventRow: View {
         switch type {
         case .notification, .permissionRequest: return Constants.orangePrimary
         case .sessionStart, .subagentStart: return Color.green
-        case .sessionEnd, .subagentStop: return Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255)
+        case .sessionEnd, .subagentStop: return Constants.destructiveRed
         case .stop, .taskCompleted: return Constants.orangePrimary
-        case .postToolUseFailure: return Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255)
+        case .postToolUseFailure: return Constants.destructiveRed
         case .preToolUse, .postToolUse: return Color(.sRGB, red: 147/255, green: 51/255, blue: 234/255)
         default: return Constants.textMuted
         }

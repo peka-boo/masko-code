@@ -65,7 +65,7 @@ struct OnboardingView: View {
             .padding(.bottom, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Constants.lightBackground)
+        .background(Constants.darkBackground)
         .animation(.easeInOut(duration: 0.3), value: step)
         .onAppear {
             hookInstalled = HookInstaller.isRegistered()
@@ -87,24 +87,24 @@ struct OnboardingView: View {
 
             VStack(spacing: 4) {
                 Text("Welcome to Masko")
-                    .font(Constants.heading(size: 28, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
                 Text("for Claude Code + Codex")
-                    .font(Constants.heading(size: 18, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundStyle(Constants.textMuted)
             }
 
             Text("Masko lives on your screen, reacts to assistant activity, and lets you approve actions without switching windows.")
-                .font(Constants.body(size: 14))
+                .font(Constants.fontBody)
                 .foregroundStyle(Constants.textMuted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Constants.contentPaddingH)
 
             primaryButton("Get Started") {
                 nextStep(after: 0)
             }
-            .padding(.top, 8)
+            .padding(.top, Constants.spacingTight)
         }
     }
 
@@ -117,20 +117,20 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("Connect to Claude Code")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Masko listens to Claude Code events via hooks and Codex events via local session logs. Claude hooks add a small config to ~/.claude/settings.json.")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             if let error = hookError {
                 Text(error)
-                    .font(Constants.body(size: 12))
+                    .font(Constants.fontCallout)
                     .foregroundStyle(.red)
             }
 
@@ -139,7 +139,7 @@ struct OnboardingView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text("Hooks enabled")
-                        .font(Constants.body(size: 14, weight: .medium))
+                        .font(Constants.fontBody)
                         .foregroundStyle(.green)
                 }
 
@@ -164,15 +164,15 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("Stay in the loop")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Get notified when your assistant needs your attention \u{2014} permission requests, questions, and completed tasks.")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             primaryButton("Enable Notifications") {
@@ -195,27 +195,27 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("Keyboard shortcuts")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Accept permissions with \u{2318}1, toggle focus with a global shortcut - without switching windows.")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             // Focus Toggle shortcut picker
             HStack(spacing: 10) {
                 Text("Focus Toggle")
-                    .font(Constants.body(size: 13, weight: .medium))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textPrimary)
 
                 ShortcutRecorderView(hotkeyManager: appStore.hotkeyManager)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.horizontal, Constants.contentPaddingH)
+            .padding(.vertical, Constants.spacingNormal)
             .background(Constants.textMuted.opacity(0.06))
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
@@ -224,7 +224,7 @@ struct OnboardingView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text("Accessibility enabled")
-                        .font(Constants.body(size: 14, weight: .medium))
+                        .font(Constants.fontBody)
                         .foregroundStyle(.green)
                 }
 
@@ -250,15 +250,15 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("Switch terminals instantly")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Install a tiny extension so clicking a session in Masko jumps to the exact terminal tab.")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             // Per-IDE detection list
@@ -270,11 +270,11 @@ struct OnboardingView: View {
                             .foregroundStyle(ideExtensionInstalled ? .green : Constants.orangePrimary)
                             .font(.system(size: 10))
                         Text(ide.name)
-                            .font(Constants.body(size: 14, weight: .medium))
+                            .font(Constants.fontBody)
                             .foregroundStyle(Constants.textPrimary)
                         Spacer()
                         Text("Detected")
-                            .font(Constants.body(size: 12))
+                            .font(Constants.fontCallout)
                             .foregroundStyle(Constants.textMuted)
                     }
                     .padding(.horizontal, 30)
@@ -283,7 +283,7 @@ struct OnboardingView: View {
 
             if let error = ideExtensionError {
                 Text(error)
-                    .font(Constants.body(size: 12))
+                    .font(Constants.fontCallout)
                     .foregroundStyle(.red)
             }
 
@@ -310,15 +310,15 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("Choose your mascot")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Pick a companion that will live on your screen and react to assistant activity.")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             // Preset grid
@@ -334,14 +334,14 @@ struct OnboardingView: View {
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Constants.contentPaddingH)
 
             if mascotActivated {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                     Text("Mascot activated!")
-                        .font(Constants.body(size: 14, weight: .medium))
+                        .font(Constants.fontBody)
                         .foregroundStyle(.green)
                 }
 
@@ -370,15 +370,15 @@ struct OnboardingView: View {
 
             VStack(spacing: 8) {
                 Text("You're all set!")
-                    .font(Constants.heading(size: 24, weight: .bold))
+                    .font(Constants.fontTitle)
                     .foregroundStyle(Constants.textPrimary)
 
                 Text("Masko Code is free and open source.\nIf you like it, a GitHub star helps us grow!")
-                    .font(Constants.body(size: 14))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, Constants.contentPaddingH)
             }
 
             primaryButton("Star on GitHub") {
@@ -405,12 +405,12 @@ struct OnboardingView: View {
     private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(Constants.heading(size: 16, weight: .semibold))
+                .font(Constants.fontHeadline)
                 .foregroundStyle(.white)
                 .frame(maxWidth: 280)
                 .padding(.vertical, 14)
                 .background(Constants.orangePrimary)
-                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .shadow(color: Constants.orangeShadow, radius: 0, x: 0, y: 4)
         }
         .buttonStyle(.plain)
@@ -419,7 +419,7 @@ struct OnboardingView: View {
     private func skipButton(action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text("Skip")
-                .font(Constants.body(size: 13, weight: .medium))
+                .font(Constants.fontBody)
                 .foregroundStyle(Constants.textMuted)
         }
         .buttonStyle(.plain)
@@ -523,7 +523,7 @@ struct PresetPickerCard: View {
                                     .scaleEffect(0.6)
                             }
                         }
-                        .padding(8)
+.padding(Constants.spacingTight)
                     } else {
                         Image(systemName: "wand.and.stars")
                             .font(.system(size: 24))
@@ -533,11 +533,11 @@ struct PresetPickerCard: View {
                 .frame(height: 80)
 
                 Text(presetConfig?.name ?? preset.slug)
-                    .font(Constants.body(size: 12, weight: .medium))
+                    .font(Constants.fontCallout)
                     .foregroundStyle(Constants.textPrimary)
                     .lineLimit(1)
             }
-            .padding(8)
+            .padding(Constants.spacingTight)
             .background(isSelected ? Constants.orangePrimary.opacity(0.08) : Constants.surfaceWhite)
             .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
             .overlay(

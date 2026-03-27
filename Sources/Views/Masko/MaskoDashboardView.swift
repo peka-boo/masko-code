@@ -217,7 +217,7 @@ struct MaskoDashboardView: View {
             // Inline header
             HStack(spacing: 10) {
                 Text("Mascots")
-                    .font(Constants.heading(size: 18, weight: .semibold))
+                    .font(Constants.fontTitle)
                     .foregroundColor(Constants.textPrimary)
 
                 Spacer()
@@ -228,10 +228,10 @@ struct MaskoDashboardView: View {
                             Image(systemName: "moon.zzz.fill")
                                 .font(.system(size: 12))
                             Text(snoozeLabel)
-                                .font(Constants.body(size: 13, weight: .medium))
+                                .font(Constants.fontBody)
                         }
                         .foregroundColor(Constants.orangePrimary)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Constants.spacingNormal)
                         .padding(.vertical, 6)
                         .background(Constants.orangePrimary.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
@@ -247,10 +247,10 @@ struct MaskoDashboardView: View {
                             Image(systemName: "eye.slash")
                                 .font(.system(size: 12))
                             Text("Hide")
-                                .font(Constants.body(size: 13, weight: .medium))
+                                .font(Constants.fontBody)
                         }
                         .foregroundColor(Constants.textMuted)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, Constants.spacingNormal)
                         .padding(.vertical, 6)
                         .background(Constants.surfaceWhite)
                         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
@@ -276,9 +276,9 @@ struct MaskoDashboardView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Constants.contentPaddingH)
+            .padding(.top, Constants.contentPaddingV)
+            .padding(.bottom, Constants.spacingNormal)
 
             if !overlayManager.isOverlayEnabled {
                 HStack(spacing: 10) {
@@ -287,10 +287,10 @@ struct MaskoDashboardView: View {
                         .foregroundColor(Constants.textMuted)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Mascot overlay is disabled")
-                            .font(Constants.heading(size: 13, weight: .medium))
+                            .font(Constants.fontHeadline)
                             .foregroundColor(Constants.textPrimary)
                         Text("Notifications and permissions still work. Activate a mascot to re-enable.")
-                            .font(Constants.body(size: 12))
+                            .font(Constants.fontCallout)
                             .foregroundColor(Constants.textMuted)
                     }
                     Spacer()
@@ -299,8 +299,8 @@ struct MaskoDashboardView: View {
                         overlayManager.restoreIfNeeded()
                     }) {
                         Text("Enable")
-                            .font(Constants.heading(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
+                            .font(Constants.fontHeadline)
+                            .foregroundColor(Constants.textPrimary)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
                             .background(Constants.orangePrimary)
@@ -308,10 +308,10 @@ struct MaskoDashboardView: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(12)
+                .padding(Constants.spacingNormal)
                 .background(Constants.border.opacity(0.5))
                 .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Constants.contentPaddingH)
             }
 
             mascotListView
@@ -365,14 +365,14 @@ struct MaskoDashboardView: View {
                 }
 
             }
-            .padding(20)
+            .padding(Constants.contentPaddingH)
 
             // CTA banners
             browseCommunityBanner
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Constants.contentPaddingH)
 
             createMascotBanner
-                .padding(.horizontal, 20)
+                .padding(.horizontal, Constants.contentPaddingH)
                 .padding(.bottom, 20)
         }
     }
@@ -388,10 +388,10 @@ struct MaskoDashboardView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Browse Community Mascots")
-                        .font(Constants.heading(size: 14, weight: .semibold))
+                        .font(Constants.fontHeadline)
                         .foregroundColor(Constants.textPrimary)
                     Text("Discover and install mascots made by the community")
-                        .font(Constants.body(size: 12))
+                        .font(Constants.fontCallout)
                         .foregroundColor(Constants.textMuted)
                 }
 
@@ -422,7 +422,7 @@ struct MaskoDashboardView: View {
                         .font(.system(size: 14))
                         .foregroundColor(Constants.orangePrimary)
                     Text("Create your own mascot")
-                        .font(Constants.heading(size: 14, weight: .semibold))
+                        .font(Constants.fontHeadline)
                         .foregroundColor(Constants.textPrimary)
                 }
 
@@ -436,14 +436,14 @@ struct MaskoDashboardView: View {
                     Spacer()
                     HStack(spacing: 4) {
                         Text("Open Mascot Creator")
-                            .font(Constants.heading(size: 13, weight: .semibold))
-                            .foregroundColor(.white)
+                            .font(Constants.fontHeadline)
+                            .foregroundColor(Constants.textPrimary)
                         Image(systemName: "arrow.up.right")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(Constants.textPrimary)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, Constants.contentPaddingH)
+                    .padding(.vertical, Constants.spacingTight)
                     .background(Constants.orangePrimary)
                     .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     Spacer()
@@ -463,13 +463,13 @@ struct MaskoDashboardView: View {
     private func stepRow(number: String, text: String) -> some View {
         HStack(spacing: 8) {
             Text(number)
-                .font(Constants.heading(size: 11, weight: .bold))
+                .font(Constants.fontSubheadline)
                 .foregroundColor(Constants.orangePrimary)
                 .frame(width: 18, height: 18)
                 .background(Constants.orangePrimary.opacity(0.15))
                 .clipShape(Circle())
             Text(text)
-                .font(Constants.body(size: 12))
+                .font(Constants.fontCallout)
                 .foregroundColor(Constants.textMuted)
         }
     }
@@ -480,7 +480,7 @@ struct MaskoDashboardView: View {
         VStack(spacing: 16) {
             HStack {
                 Text("Import JSON")
-                    .font(Constants.heading(size: 18, weight: .semibold))
+                    .font(Constants.fontTitle)
                     .foregroundColor(Constants.textPrimary)
                 Spacer()
                 Button(action: {
@@ -495,7 +495,7 @@ struct MaskoDashboardView: View {
             }
 
             Text("Paste config JSON exported from the masko.ai canvas editor")
-                .font(Constants.body(size: 13))
+                .font(Constants.fontBody)
                 .foregroundColor(Constants.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -508,8 +508,8 @@ struct MaskoDashboardView: View {
 
             if let parseError {
                 Text(parseError)
-                    .font(Constants.body(size: 11))
-                    .foregroundColor(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
+                    .font(Constants.fontSubheadline)
+                    .foregroundColor(Constants.destructiveRed)
             }
 
             Button(action: addMascot) {
@@ -521,7 +521,7 @@ struct MaskoDashboardView: View {
             ))
             .disabled(jsonText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
-        .padding(20)
+        .padding(Constants.contentPaddingH)
         .frame(width: 460, height: 320)
         .background(Constants.lightBackground)
     }
@@ -590,7 +590,7 @@ struct MascotCard: View {
                                 .font(.system(size: 28))
                                 .foregroundColor(Constants.orangePrimary.opacity(0.6))
                             Text("\(mascot.config.nodes.count) poses")
-                                .font(Constants.body(size: 11))
+                                .font(Constants.fontSubheadline)
                                 .foregroundColor(Constants.textMuted)
                         }
                     }
@@ -598,14 +598,14 @@ struct MascotCard: View {
                 .frame(height: 140)
             }
             .buttonStyle(.plain)
-            .padding(12)
+            .padding(Constants.spacingNormal)
             .padding(.bottom, 0)
 
             VStack(alignment: .leading, spacing: 4) {
                 Button(action: onTap) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(mascot.name)
-                            .font(Constants.heading(size: 15, weight: .semibold))
+                            .font(Constants.fontHeadline)
                             .foregroundColor(Constants.textPrimary)
                             .lineLimit(1)
 
@@ -613,7 +613,7 @@ struct MascotCard: View {
                             let nodeCount = mascot.config.nodes.count
                             let edgeCount = mascot.config.edges.count
                             Text("\(nodeCount) node\(nodeCount == 1 ? "" : "s") · \(edgeCount) transition\(edgeCount == 1 ? "" : "s")")
-                                .font(Constants.body(size: 12))
+                                .font(Constants.fontCallout)
                                 .foregroundColor(Constants.textMuted)
                         }
                     }
@@ -628,10 +628,10 @@ struct MascotCard: View {
                                 .font(.system(size: 10))
                             Text("Activate")
                         }
-                        .font(Constants.heading(size: 13, weight: .medium))
-                        .foregroundColor(.white)
+                        .font(Constants.fontHeadline)
+                        .foregroundColor(Constants.textPrimary)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, Constants.spacingTight)
                         .background(Constants.orangePrimary)
                         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     }
@@ -653,8 +653,8 @@ struct MascotCard: View {
                 }
                 .padding(.top, 4)
             }
-            .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.horizontal, Constants.spacingNormal)
+            .padding(.bottom, Constants.spacingNormal)
         }
         .background(Constants.surfaceWhite)
         .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
@@ -767,7 +767,7 @@ struct JSONEditorSheet: View {
         VStack(spacing: 12) {
             HStack {
                 Text(name)
-                    .font(Constants.heading(size: 16, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
                 Spacer()
 
@@ -799,8 +799,8 @@ struct JSONEditorSheet: View {
 
             if let parseError {
                 Text(parseError)
-                    .font(Constants.body(size: 11))
-                    .foregroundColor(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
+                    .font(Constants.fontSubheadline)
+                    .foregroundColor(Constants.destructiveRed)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -811,7 +811,7 @@ struct JSONEditorSheet: View {
                         .stroke(Constants.border, lineWidth: 1)
                 )
         }
-        .padding(20)
+        .padding(Constants.contentPaddingH)
         .frame(width: 560, height: 480)
         .background(Constants.lightBackground)
     }

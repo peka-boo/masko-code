@@ -144,7 +144,7 @@ struct MaskoDesktopApp: App {
                 .environment(appUpdater)
                 .environment(ViewClock.shared)
                 .frame(minWidth: 800, minHeight: 500)
-                .preferredColorScheme(.light)
+                .preferredColorScheme(.dark)
                 .task {
                     guard !appStore.isRunning else { return }
                     overlayManager.sessionStore = appStore.sessionStore
@@ -212,7 +212,7 @@ struct MaskoDesktopApp: App {
                 Image(nsImage: resized)
                 if appStore.hasUnreadNotifications {
                     Circle()
-                        .fill(Color.red)
+                        .fill(Constants.destructiveRed)
                         .frame(width: 6, height: 6)
                         .offset(x: 6, y: -6)
                 }

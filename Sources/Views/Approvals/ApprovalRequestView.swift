@@ -17,10 +17,10 @@ struct ApprovalRequestView: View {
                         .font(.system(size: 36))
                         .foregroundColor(Constants.textMuted)
                     Text("No Approvals")
-                        .font(Constants.heading(size: 22, weight: .semibold))
+                        .font(Constants.fontTitle.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     Text("Permission requests from supported assistants will appear here")
-                        .font(Constants.body(size: 14))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                     Spacer()
                 }
@@ -59,17 +59,17 @@ struct ApprovalRequestView: View {
     private func sectionHeader(_ title: String, count: Int) -> some View {
         HStack {
             Text(title)
-                .font(Constants.heading(size: 12, weight: .semibold))
+                .font(Constants.fontSubheadline.weight(.semibold))
                 .foregroundColor(Constants.textMuted)
                 .textCase(.uppercase)
             Text("\(count)")
-                .font(Constants.body(size: 11, weight: .medium))
+                .font(Constants.fontSubheadline.weight(.medium))
                 .foregroundColor(Constants.textMuted)
             Spacer()
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, Constants.contentPaddingH)
+        .padding(.top, Constants.contentPaddingH)
+        .padding(.bottom, Constants.spacingTight)
     }
 }
 
@@ -91,27 +91,27 @@ private struct PendingApprovalRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(permission.toolName)
-                        .font(Constants.heading(size: 14, weight: .semibold))
+                        .font(Constants.fontHeadline.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     Spacer()
                 }
 
                 if let projectName = permission.event.projectName {
                     Text(projectName)
-                        .font(Constants.body(size: 13))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                         .lineLimit(2)
                 }
 
                 HStack {
                     Text(relativeTimeString(from: permission.event.receivedAt))
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
 
                     Text("·")
                         .foregroundColor(Constants.textMuted)
                     Text(permission.event.assistantDisplayName)
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
 
                     Spacer()
@@ -119,11 +119,11 @@ private struct PendingApprovalRow: View {
                     Button("Deny") {
                         appStore.pendingPermissionStore.resolve(id: permission.id, decision: .deny)
                     }
-                    .buttonStyle(BrandGhostButton(color: Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255)))
+                    .buttonStyle(BrandGhostButton(color: Constants.destructiveRed))
                 }
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Constants.contentPaddingH)
         .padding(.vertical, 10)
     }
 }
@@ -145,7 +145,7 @@ private struct HistoryApprovalRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(record.toolName)
-                        .font(Constants.heading(size: 14, weight: .semibold))
+                        .font(Constants.fontHeadline.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     Spacer()
                     outcomeBadge
@@ -153,30 +153,30 @@ private struct HistoryApprovalRow: View {
 
                 if let summary = record.toolInputSummary {
                     Text(summary)
-                        .font(Constants.body(size: 13))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                         .lineLimit(2)
                 }
 
                 HStack {
                     Text(relativeTimeString(from: record.createdAt))
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
 
                     Text("·")
                         .foregroundColor(Constants.textMuted)
                     Text("resolved ")
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                     + Text(relativeTimeString(from: record.resolvedAt))
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
 
                     Spacer()
                 }
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Constants.contentPaddingH)
         .padding(.vertical, 10)
     }
 
@@ -195,7 +195,7 @@ private struct HistoryApprovalRow: View {
     private var outcomeColor: Color {
         switch record.outcome {
         case .allowed: return Color(.sRGB, red: 22/255, green: 163/255, blue: 74/255)
-        case .denied: return Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255)
+        case .denied: return Constants.destructiveRed
         case .expired: return Constants.textMuted
         case .unknown: return Constants.textMuted
         case .pending: return Constants.orangePrimary
@@ -206,7 +206,7 @@ private struct HistoryApprovalRow: View {
     private var outcomeBadge: some View {
         let (label, color) = badgeConfig
         Text(label)
-            .font(Constants.body(size: 11, weight: .medium))
+            .font(Constants.fontSubheadline.weight(.medium))
             .foregroundColor(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
@@ -218,7 +218,7 @@ private struct HistoryApprovalRow: View {
         case .allowed:
             return ("Allowed", Color(.sRGB, red: 22/255, green: 163/255, blue: 74/255))
         case .denied:
-            return ("Denied", Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
+            return ("Denied", Constants.destructiveRed)
         case .expired:
             return ("Expired", Constants.textMuted)
         case .unknown:

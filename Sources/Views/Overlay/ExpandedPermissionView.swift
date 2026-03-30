@@ -29,6 +29,11 @@ struct ExpandedPermissionView: View {
     @State private var currentQuestionIndex: Int = 0
     @FocusState private var otherFieldFocused: String?
 
+    // Auto-allow state
+    @State private var isAutoAllowEnabled = false
+    @State private var autoAllowRemainingSeconds: Double = 5.0
+    @State private var autoAllowTimer: Timer?
+
     private var isPlan: Bool { permission.event.toolName == "ExitPlanMode" }
     private var isQuestion: Bool { permission.parsedQuestions != nil && !(permission.parsedQuestions ?? []).isEmpty }
     private var questions: [ParsedQuestion] { permission.parsedQuestions ?? [] }
@@ -81,6 +86,9 @@ struct ExpandedPermissionView: View {
 
             // Action bar
             VStack(spacing: 12) {
+                // Auto-allow row
+                autoAllowRow
+                
                 if isPlan {
                     planActions
                 } else if isQuestion {
@@ -100,6 +108,9 @@ struct ExpandedPermissionView: View {
                 .stroke(Constants.border, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
+        .onDisappear {
+            cancelAutoAllowTimer()
+        }
     }
 
     // MARK: - Header
@@ -397,6 +408,7 @@ struct ExpandedPermissionView: View {
             Spacer()
 
             Button {
+                cancelAutoAllowTimer()
                 onDecision(.deny)
                 onClose()
             } label: {
@@ -415,7 +427,10 @@ struct ExpandedPermissionView: View {
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: .command)
 
-            Button { submitAnswers() } label: {
+            Button { 
+                cancelAutoAllowTimer()
+                submitAnswers() 
+            } label: {
                 HStack(spacing: 5) {
                     Text("Submit")
                         .font(Constants.fontHeadline)
@@ -510,10 +525,11 @@ struct ExpandedPermissionView: View {
             if !permission.permissionSuggestions.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(Array(permission.permissionSuggestions.enumerated()), id: \.element.id) { _, suggestion in
-                        Button {
-                            onAllowWithPermissions?([suggestion])
-                            onClose()
-                        } label: {
+            Button {
+                cancelAutoAllowTimer()
+                onDecision(.deny)
+                onClose()
+            } label: {
                             Text(suggestion.displayLabel)
                                 .font(Constants.fontCallout)
                                 .foregroundStyle(Constants.textPrimary.opacity(0.5))
@@ -532,6 +548,87 @@ struct ExpandedPermissionView: View {
 
             actionButtons
         }
+    }
+
+    // MARK: - Auto-Allow Row
+
+    private var autoAllowRow: some View {
+        VStack(spacing: 8) {
+            // Checkbox row
+            HStack(spacing: 10) {
+                Button {
+                    isAutoAllowEnabled.toggle()
+                    if isAutoAllowEnabled {
+                        startAutoAllowTimer()
+                    } else {
+                        cancelAutoAllowTimer()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: isAutoAllowEnabled ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 14))
+                            .foregroundStyle(isAutoAllowEnabled ? Constants.orangePrimary : Constants.textMuted)
+                        
+                        Text("Auto-allow")
+                            .font(Constants.fontBody)
+                            .foregroundStyle(Constants.textPrimary)
+                    }
+                }
+                .buttonStyle(.plain)
+                
+                Spacer()
+                
+                // Countdown text when enabled
+                if isAutoAllowEnabled {
+                    Text("\(Int(autoAllowRemainingSeconds))s")
+                        .font(Constants.fontCallout)
+                        .foregroundStyle(Constants.textMuted)
+                        .monospacedDigit()
+                }
+            }
+            
+            // Progress bar when enabled
+            if isAutoAllowEnabled {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background track
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Constants.border)
+                            .frame(height: 4)
+                        
+                        // Progress fill
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Constants.orangePrimary)
+                            .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 4)
+                            .animation(.linear(duration: 0.1), value: autoAllowRemainingSeconds)
+                    }
+                }
+                .frame(height: 4)
+            }
+        }
+        .padding(.horizontal, 0)
+    }
+
+    private func startAutoAllowTimer() {
+        autoAllowRemainingSeconds = 5.0
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                if autoAllowRemainingSeconds > 0 {
+                    autoAllowRemainingSeconds -= 1.0
+                    if autoAllowRemainingSeconds <= 0 {
+                        cancelAutoAllowTimer()
+                        performApprove()
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelAutoAllowTimer() {
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        autoAllowRemainingSeconds = 5.0
     }
 
     // MARK: - Shared Action Buttons (Plan + Standard)
@@ -581,7 +678,10 @@ struct ExpandedPermissionView: View {
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: .command)
 
-            Button { performApprove() } label: {
+            Button { 
+                cancelAutoAllowTimer()
+                performApprove() 
+            } label: {
                 HStack(spacing: 5) {
                     Text(isPlan ? "Approve" : "Allow")
                         .font(Constants.fontHeadline)

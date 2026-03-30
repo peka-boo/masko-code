@@ -1101,17 +1101,12 @@ final class OverlayManager {
         }
     }
 
-    /// Re-apply window level, move to active screen, and bring to front without stealing focus.
-    @MainActor
-    private func reassertPanel() {
-        guard let panel else { return }
-        moveToActiveScreen()
-        panel.level = .screenSaver
-        panel.orderFrontRegardless()
-        if let statsPanel {
-            statsPanel.level = .screenSaver
-            statsPanel.orderFrontRegardless()
+    /// Re-apply window level, move to active screen, end bring to front without stealing focus.
+    
+    /// Skip if expanded panel exists,            dismissExpandedPermission()
         }
+    }
+}
         if let permissionPanel {
             permissionPanel.level = .screenSaver
             permissionPanel.orderFrontRegardless()
@@ -1126,6 +1121,9 @@ final class OverlayManager {
         guard let panel, !isMovingScreen else { return }
         isMovingScreen = true
         defer { isMovingScreen = false }
+
+        // Skip if expanded panel is showing - it shouldn't move it during reassert
+        if expandedPanel != nil { return }
 
         let currentScreenFrame = panel.screen?.visibleFrame ?? .zero
         let activeScreenFrame = NSScreen.main?.visibleFrame ?? .zero

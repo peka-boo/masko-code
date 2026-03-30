@@ -1101,12 +1101,16 @@ final class OverlayManager {
         }
     }
 
-    /// Re-apply window level, move to active screen, end bring to front without stealing focus.
-    
-    /// Skip if expanded panel exists,            dismissExpandedPermission()
+    /// Re-apply window level, move to active screen, and bring to front without stealing focus.
+    private func reassertPanel() {
+        guard let panel else { return }
+        moveToActiveScreen()
+        panel.level = .screenSaver
+        panel.orderFrontRegardless()
+        if let statsPanel {
+            statsPanel.level = .screenSaver
+            statsPanel.orderFrontRegardless()
         }
-    }
-}
         if let permissionPanel {
             permissionPanel.level = .screenSaver
             permissionPanel.orderFrontRegardless()

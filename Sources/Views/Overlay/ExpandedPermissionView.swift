@@ -30,7 +30,7 @@ struct ExpandedPermissionView: View {
     @FocusState private var otherFieldFocused: String?
 
     // Auto-allow state
-    @State private var isAutoAllowEnabled = false
+    @State private var autoAllowEnabled = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
 
@@ -557,38 +557,38 @@ struct ExpandedPermissionView: View {
             // Checkbox row
             HStack(spacing: 10) {
                 Button {
-                    isAutoAllowEnabled.toggle()
-                    if isAutoAllowEnabled {
+                    autoAllowEnabled.toggle()
+                    if autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {
                         cancelAutoAllowTimer()
                     }
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: isAutoAllowEnabled ? "checkmark.square.fill" : "square")
+                        Image(systemName: autoAllowEnabled ? "checkmark.square.fill" : "square")
                             .font(.system(size: 14))
-                            .foregroundStyle(isAutoAllowEnabled ? Constants.orangePrimary : Constants.textMuted)
-                        
+                            .foregroundStyle(autoAllowEnabled ? Constants.orangePrimary : Constants.textMuted)
+
                         Text("Auto-allow")
                             .font(Constants.fontBody)
                             .foregroundStyle(Constants.textPrimary)
                     }
                 }
                 .buttonStyle(.plain)
-                
+
                 Spacer()
-                
+
                 // Countdown text when enabled
-                if isAutoAllowEnabled {
+                if autoAllowEnabled {
                     Text("\(Int(autoAllowRemainingSeconds))s")
                         .font(Constants.fontCallout)
                         .foregroundStyle(Constants.textMuted)
                         .monospacedDigit()
                 }
             }
-            
+
             // Progress bar when enabled
-            if isAutoAllowEnabled {
+            if autoAllowEnabled {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background track

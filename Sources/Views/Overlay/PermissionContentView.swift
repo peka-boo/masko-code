@@ -64,6 +64,15 @@ struct PermissionContentView: View {
                 compactLayout
             }
         }
+        .onAppear {
+            // Auto-start timer if enabled by default
+            if state.autoAllowEnabled && !isPlan && !isQuestion {
+                startAutoAllowTimer()
+            }
+        }
+        .onDisappear {
+            cancelAutoAllowTimer()
+        }
         .onChange(of: hotkeyManager.selectedButtonIndex) { _, newIdx in
             guard showShortcuts || isExpanded, let idx = newIdx else { return }
             handleShortcutSelection(idx)
@@ -669,6 +678,22 @@ struct PermissionContentView: View {
 
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
+            // Auto-allow row
+            AutoAllowRow(
+                isEnabled: state.autoAllowEnabled,
+                remainingSeconds: state.autoAllowRemainingSeconds,
+                onToggle: {
+                    state.autoAllowEnabled.toggle()
+                    // Save to global settings
+                    AutoAllowSettings.shared.enabledByDefault = state.autoAllowEnabled
+                    if state.autoAllowEnabled {
+                        startAutoAllowTimer()
+                    } else {
+                        cancelAutoAllowTimer()
+                    }
+                }
+            )
+
             approveAndDenyButtons(
                 approveLabel: "Allow",
                 denyLabel: "Deny",
@@ -890,5 +915,35 @@ struct PermissionContentView: View {
         guard let sessionId = permission.event.sessionId,
               let session = sessionStore.sessions.first(where: { $0.id == sessionId }) else { return nil }
         return session.projectName
+    }
+
+    // MARK: - Auto-Allow Timer
+
+    private func startAutoAllowTimer() {
+        state.autoAllowStartDate = Date()
+        state.autoAllowRemainingSeconds = 5.0
+        state.autoAllowTimer?.invalidate()
+        // Update every 50ms for smooth progress bar
+        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            Task { @MainActor in
+                if let startDate = state.autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    state.autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
+                        cancelAutoAllowTimer()
+                        onDecision(.allow)
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelAutoAllowTimer() {
+        state.autoAllowTimer?.invalidate()
+        state.autoAllowTimer = nil
+        state.autoAllowStartDate = nil
+        state.autoAllowRemainingSeconds = 5.0
     }
 }

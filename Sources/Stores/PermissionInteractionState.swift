@@ -6,6 +6,29 @@ enum PermissionDisplayMode {
     case expanded
 }
 
+/// Global auto-allow default setting (persisted)
+@Observable
+final class AutoAllowSettings {
+    static let shared = AutoAllowSettings()
+
+    private let defaultsKey = "autoAllowEnabledByDefault"
+
+    var enabledByDefault: Bool {
+        get { UserDefaults.standard.bool(forKey: defaultsKey) }
+        set {
+            UserDefaults.standard.set(newValue, forKey: defaultsKey)
+            // Post notification for observers
+            NotificationCenter.default.post(name: .autoAllowDefaultChanged, object: nil)
+        }
+    }
+
+    private init() {}
+}
+
+extension Notification.Name {
+    static let autoAllowDefaultChanged = Notification.Name("autoAllowDefaultChanged")
+}
+
 /// Shared mutable state for interacting with a pending permission.
 /// Stored in PendingPermissionStore, keyed by permission UUID.
 /// Both compact and expanded views read/write the same instance.
@@ -24,6 +47,12 @@ final class PermissionInteractionState {
 
     // Standard permission
     var isContentExpanded: Bool = false
+
+    // Auto-allow (initialized from global setting)
+    var autoAllowEnabled: Bool = AutoAllowSettings.shared.enabledByDefault
+    var autoAllowRemainingSeconds: Double = 5.0
+    var autoAllowTimer: Timer?
+    var autoAllowStartDate: Date?
 
     /// Build answers dict from current question state.
     func buildAnswers(for questions: [ParsedQuestion]) -> [String: String] {

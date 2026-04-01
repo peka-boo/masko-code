@@ -171,8 +171,117 @@ private struct SpeechBubbleShape: Shape {
     }
 }
 
-// MARK: - Shortcut Badge (reusable)
+// MARK: - Auto-Allow Row (shared component)
+struct AutoAllowRow: View {
+    let isEnabled: Bool
+    let remainingSeconds: Double
+    let onToggle: () -> Void
 
+    var body: some View {
+        VStack(spacing: 4) {
+            // Checkbox row
+            Button {
+                onToggle()
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: isEnabled ? "checkmark.square.fill" : "square")
+                        .font(.system(size: 12))
+                        .foregroundStyle(isEnabled ? OverlayStyle.orange : OverlayStyle.textMuted)
+
+                    Text("Auto-allow")
+                        .font(.system(size: 11))
+                        .foregroundStyle(OverlayStyle.textMuted)
+
+                    Spacer()
+
+                    if isEnabled {
+                        Text("\(Int(ceil(remainingSeconds)))s")
+                            .font(.system(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(OverlayStyle.orange)
+                            .monospacedDigit()
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(OverlayStyle.orange.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .contentShape(Rectangle())
+
+            // Progress bar
+            if isEnabled {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background track
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(OverlayStyle.textPrimary.opacity(0.06))
+                            .frame(height: 2)
+
+                        // Progress fill - continuous animation
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(OverlayStyle.orange.opacity(0.6))
+                            .frame(width: max(0, geometry.size.width * (remainingSeconds / 5.0)), height: 2)
+                    }
+                }
+                .frame(height: 2)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - Auto-Allow Modifier (helper for adding auto-allow functionality)
+struct AutoAllowModifier: ViewModifier {
+    @Binding var isEnabled: Bool
+    @Binding var remainingSeconds: Double
+    let onTimeout: () -> Void
+    
+    @State private var timer: Timer?
+    
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                if isEnabled {
+                    startTimer()
+                }
+            }
+            .onDisappear {
+                cancelTimer()
+            }
+            .onChange(of: isEnabled) { _, newValue in
+                if newValue {
+                    startTimer()
+                } else {
+                    cancelTimer()
+                    remainingSeconds = 5.0
+                }
+            }
+    }
+    
+    private func startTimer() {
+                remainingSeconds = 5.0
+                timer?.invalidate()
+                timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+                    Task { @MainActor in
+                        if remainingSeconds > 0 {
+                            remainingSeconds -= 1.0
+                            if remainingSeconds <= 0 {
+                                cancelTimer()
+                                onTimeout()
+                            }
+                        }
+                    }
+                }
+            }
+    
+    private func cancelTimer() {
+                timer?.invalidate()
+                timer = nil
+    }
+}
+
+// MARK: - Shortcut Badge (reusable)
 /// Small capsule badge showing ⌘N, overlaid on buttons/options when holding ⌘
 struct ShortcutBadge: View {
     let index: Int
@@ -276,6 +385,7 @@ struct AskUserQuestionView: View {
     @State private var usingCustom: Set<String> = []
     @State private var currentQuestionIndex: Int = 0
     @FocusState private var otherFieldFocused: String?
+    @State private var autoAllowEnabled = false
 
     private var allAnswered: Bool {
         questions.allSatisfy { q in
@@ -896,6 +1006,11 @@ struct PermissionPromptView: View {
     @Environment(SessionStore.self) private var sessionStore
     @State private var isExpanded = false
 
+    // Auto-allow state
+    @State private var autoAllowEnabled = false
+    @State private var autoAllowRemainingSeconds: Double = 5.0
+    @State private var autoAllowTimer: Timer?
+
     var body: some View {
         if permission.event.toolName == "ExitPlanMode" {
             ExitPlanModeView(
@@ -1007,6 +1122,20 @@ struct PermissionPromptView: View {
             // Buttons: Allow / Deny
             let suggestions = permission.permissionSuggestions
 
+            // Auto-allow row
+            AutoAllowRow(
+                isEnabled: autoAllowEnabled,
+                remainingSeconds: autoAllowRemainingSeconds,
+                onToggle: {
+                    autoAllowEnabled.toggle()
+                    if autoAllowEnabled {
+                        startAutoAllowTimer()
+                    } else {
+                        cancelAutoAllowTimer()
+                    }
+                }
+            )
+
             VStack(spacing: 3) {
                 HStack(spacing: 5) {
                     Button {
@@ -1095,6 +1224,33 @@ struct PermissionPromptView: View {
                 onDecision(.allow)
             }
         }
+        .onDisappear {
+            cancelAutoAllowTimer()
+        }
+    }
+
+    // MARK: - Auto-Allow Timer Functions
+
+    private func startAutoAllowTimer() {
+        autoAllowRemainingSeconds = 5.0
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                if autoAllowRemainingSeconds > 0 {
+                    autoAllowRemainingSeconds -= 1.0
+                    if autoAllowRemainingSeconds <= 0 {
+                        cancelAutoAllowTimer()
+                        onDecision(.allow)
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelAutoAllowTimer() {
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        autoAllowRemainingSeconds = 5.0
     }
 }
 

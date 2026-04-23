@@ -179,55 +179,43 @@ struct AutoAllowRow: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            // Checkbox row
-            Button {
-                onToggle()
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: isEnabled ? "checkmark.square.fill" : "square")
-                        .font(.system(size: 12))
-                        .foregroundStyle(isEnabled ? OverlayStyle.orange : OverlayStyle.textMuted)
-
-                    Text("Auto-allow")
-                        .font(.system(size: 11))
+            HStack {
+                Toggle(isOn: Binding(
+                    get: { isEnabled },
+                    set: { _ in onToggle() }
+                )) {
+                    Text("Auto-allow in")
+                        .font(Constants.fontFootnote)
                         .foregroundStyle(OverlayStyle.textMuted)
+                }
+                .buttonStyle(.plain)
 
-                    Spacer()
+                Spacer()
 
-                    if isEnabled {
-                        Text("\(Int(ceil(remainingSeconds)))s")
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(OverlayStyle.orange)
-                            .monospacedDigit()
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(OverlayStyle.orange.opacity(0.1))
-                            .clipShape(Capsule())
-                    }
+                if isEnabled {
+                    Text("\(Int(remainingSeconds))s")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
+                        .monospacedDigit()
                 }
             }
-            .buttonStyle(.plain)
-            .contentShape(Rectangle())
 
-            // Progress bar
             if isEnabled {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        // Background track
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(OverlayStyle.textPrimary.opacity(0.06))
-                            .frame(height: 2)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(OverlayStyle.textPrimary.opacity(0.1))
+                            .frame(height: 3)
 
-                        // Progress fill - continuous animation
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(OverlayStyle.orange.opacity(0.6))
-                            .frame(width: max(0, geometry.size.width * (remainingSeconds / 5.0)), height: 2)
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(OverlayStyle.orange)
+                            .frame(width: geometry.size.width * (remainingSeconds / 5.0), height: 3)
+                            .animation(.linear(duration: 0.1), value: remainingSeconds)
                     }
                 }
-                .frame(height: 2)
+                .frame(height: 3)
             }
         }
-        .padding(.vertical, 2)
     }
 }
 

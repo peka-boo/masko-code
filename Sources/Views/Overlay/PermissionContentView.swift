@@ -64,15 +64,6 @@ struct PermissionContentView: View {
                 compactLayout
             }
         }
-        .onAppear {
-            // Auto-start timer if enabled by default
-            if state.autoAllowEnabled && !isPlan && !isQuestion {
-                startAutoAllowTimer()
-            }
-        }
-        .onDisappear {
-            cancelAutoAllowTimer()
-        }
         .onChange(of: hotkeyManager.selectedButtonIndex) { _, newIdx in
             guard showShortcuts || isExpanded, let idx = newIdx else { return }
             handleShortcutSelection(idx)
@@ -684,8 +675,6 @@ struct PermissionContentView: View {
                 remainingSeconds: state.autoAllowRemainingSeconds,
                 onToggle: {
                     state.autoAllowEnabled.toggle()
-                    // Save to global settings
-                    AutoAllowSettings.shared.enabledByDefault = state.autoAllowEnabled
                     if state.autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {
@@ -920,18 +909,13 @@ struct PermissionContentView: View {
     // MARK: - Auto-Allow Timer
 
     private func startAutoAllowTimer() {
-        state.autoAllowStartDate = Date()
         state.autoAllowRemainingSeconds = 5.0
         state.autoAllowTimer?.invalidate()
-        // Update every 50ms for smooth progress bar
-        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task { @MainActor in
-                if let startDate = state.autoAllowStartDate {
-                    let elapsed = Date().timeIntervalSince(startDate)
-                    let remaining = max(0, 5.0 - elapsed)
-                    state.autoAllowRemainingSeconds = remaining
-
-                    if remaining <= 0 {
+                if state.autoAllowRemainingSeconds > 0 {
+                    state.autoAllowRemainingSeconds -= 1.0
+                    if state.autoAllowRemainingSeconds <= 0 {
                         cancelAutoAllowTimer()
                         onDecision(.allow)
                     }
@@ -943,7 +927,6 @@ struct PermissionContentView: View {
     private func cancelAutoAllowTimer() {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = nil
-        state.autoAllowStartDate = nil
         state.autoAllowRemainingSeconds = 5.0
     }
 }

@@ -669,7 +669,7 @@ struct PermissionContentView: View {
 
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
-            // Auto-allow row
+            // Auto-allow row (one-time, 5s countdown)
             AutoAllowRow(
                 isEnabled: state.autoAllowEnabled,
                 remainingSeconds: state.autoAllowRemainingSeconds,
@@ -682,6 +682,22 @@ struct PermissionContentView: View {
                     }
                 }
             )
+
+            // Session auto-allow toggle
+            if let sessionId = permission.event.sessionId {
+                HStack {
+                    Toggle(isOn: Binding(
+                        get: { store.isSessionAutoAllow(sessionId) },
+                        set: { store.setSessionAutoAllow(sessionId, enabled: $0) }
+                    )) {
+                        Text("Auto-allow this session")
+                            .font(Constants.fontFootnote)
+                            .foregroundStyle(OverlayStyle.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                }
+            }
 
             approveAndDenyButtons(
                 approveLabel: "Allow",

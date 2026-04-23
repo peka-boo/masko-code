@@ -88,7 +88,23 @@ struct ExpandedPermissionView: View {
             VStack(spacing: 12) {
                 // Auto-allow row
                 autoAllowRow
-                
+
+                // Session auto-allow toggle
+                if let sessionId = permission.event.sessionId {
+                    HStack {
+                        Toggle(isOn: Binding(
+                            get: { pendingPermissionStore.isSessionAutoAllow(sessionId) },
+                            set: { pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: $0) }
+                        )) {
+                            Text("Auto-allow this session")
+                                .font(Constants.fontBody)
+                                .foregroundStyle(Constants.textMuted)
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
+                    }
+                }
+
                 if isPlan {
                     planActions
                 } else if isQuestion {

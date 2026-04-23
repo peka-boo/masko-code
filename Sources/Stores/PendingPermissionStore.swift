@@ -370,6 +370,9 @@ final class PendingPermissionStore {
     /// Key: "sessionId|agentId|toolName" → toolUseId
     private var preToolUseCache: [String: String] = [:]
 
+    /// Sessions where user enabled "auto-allow for this session" — all future permissions auto-allowed
+    private(set) var sessionAutoAllow: Set<String> = []
+
     init() {
         startLivenessChecks()
     }
@@ -391,6 +394,21 @@ final class PendingPermissionStore {
             resolvedToolUseId = preToolUseCache.removeValue(forKey: key)
         }
         if isDuplicate(event: event, resolvedToolUseId: resolvedToolUseId) {
+            return
+        }
+
+        // Auto-allow for sessions where user enabled it
+        if let sessionId = event.sessionId, sessionAutoAllow.contains(sessionId) {
+            let permission = PendingPermission(
+                id: UUID(),
+                event: event,
+                transport: transport,
+                receivedAt: Date(),
+                resolvedToolUseId: resolvedToolUseId
+            )
+            print("[masko-desktop] Session auto-allow: \(event.toolName ?? "unknown") in session \(sessionId)")
+            permission.transport.sendDecision(.allow)
+            onResolved?(event, .allowed)
             return
         }
 
@@ -489,6 +507,18 @@ final class PendingPermissionStore {
         for id in staleIds {
             silentRemove(id: id)
         }
+    }
+
+    func setSessionAutoAllow(_ sessionId: String, enabled: Bool) {
+        if enabled {
+            sessionAutoAllow.insert(sessionId)
+        } else {
+            sessionAutoAllow.remove(sessionId)
+        }
+    }
+
+    func isSessionAutoAllow(_ sessionId: String) -> Bool {
+        sessionAutoAllow.contains(sessionId)
     }
 
     /// Dismiss all pending permissions for a session (user answered from terminal).

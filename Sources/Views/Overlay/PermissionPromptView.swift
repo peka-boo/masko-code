@@ -991,6 +991,7 @@ struct PermissionPromptView: View {
     @Environment(\.speechBubbleTailSide) private var tailSide
     @Environment(\.speechBubbleTailPercent) private var tailPercent
     @Environment(GlobalHotkeyManager.self) private var hotkeyManager
+    @Environment(PendingPermissionStore.self) private var store
     @Environment(SessionStore.self) private var sessionStore
     @State private var isExpanded = false
 
@@ -1123,6 +1124,22 @@ struct PermissionPromptView: View {
                     }
                 }
             )
+
+            // Session auto-allow toggle
+            if let sessionId = permission.event.sessionId {
+                HStack {
+                    Toggle(isOn: Binding(
+                        get: { store.isSessionAutoAllow(sessionId) },
+                        set: { store.setSessionAutoAllow(sessionId, enabled: $0) }
+                    )) {
+                        Text("Auto-allow this session")
+                            .font(Constants.fontFootnote)
+                            .foregroundStyle(OverlayStyle.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                }
+            }
 
             VStack(spacing: 3) {
                 HStack(spacing: 5) {

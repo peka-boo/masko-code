@@ -174,6 +174,7 @@ private struct SpeechBubbleShape: Shape {
 // MARK: - Auto-Allow Row (shared component)
 struct AutoAllowRow: View {
     let isEnabled: Bool
+    let isCountdownActive: Bool
     let remainingSeconds: Double
     let onToggle: () -> Void
 
@@ -192,15 +193,15 @@ struct AutoAllowRow: View {
 
                 Spacer()
 
-                if isEnabled {
-                    Text("\(Int(remainingSeconds))s")
+                if isCountdownActive {
+                    Text("\(Int(ceil(remainingSeconds)))s")
                         .font(Constants.fontFootnote)
                         .foregroundStyle(OverlayStyle.textMuted)
                         .monospacedDigit()
                 }
             }
 
-            if isEnabled {
+            if isCountdownActive {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 2)
@@ -996,6 +997,7 @@ struct PermissionPromptView: View {
 
     // Auto-allow state
     @State private var autoAllowEnabled = false
+    @State private var isCountdownActive = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
@@ -1114,6 +1116,7 @@ struct PermissionPromptView: View {
             // Auto-allow row
             AutoAllowRow(
                 isEnabled: autoAllowEnabled,
+                isCountdownActive: isCountdownActive,
                 remainingSeconds: autoAllowRemainingSeconds,
                 onToggle: {
                     autoAllowEnabled.toggle()
@@ -1133,8 +1136,7 @@ struct PermissionPromptView: View {
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
                             store.setSessionAutoAllow(sessionId, enabled: newValue)
-                            if newValue && !autoAllowEnabled {
-                                autoAllowEnabled = true
+                            if newValue && !isCountdownActive {
                                 startAutoAllowTimer()
                             }
                         }
@@ -1238,13 +1240,12 @@ struct PermissionPromptView: View {
         }
         .onAppear {
             // Auto-start: check global auto-allow first, then session-scoped
-            if !autoAllowEnabled {
+            if !isCountdownActive {
                 if store.globalAutoAllow {
                     autoAllowEnabled = true
                     startAutoAllowTimer()
                 } else if let sessionId = permission.event.sessionId,
                           store.isSessionAutoAllow(sessionId) {
-                    autoAllowEnabled = true
                     startAutoAllowTimer()
                 }
             }
@@ -1257,6 +1258,7 @@ struct PermissionPromptView: View {
     // MARK: - Auto-Allow Timer Functions
 
     private func startAutoAllowTimer() {
+        isCountdownActive = true
         autoAllowStartDate = Date()
         autoAllowRemainingSeconds = 5.0
         autoAllowTimer?.invalidate()
@@ -1280,6 +1282,7 @@ struct PermissionPromptView: View {
         autoAllowTimer?.invalidate()
         autoAllowTimer = nil
         autoAllowStartDate = nil
+        isCountdownActive = false
         autoAllowRemainingSeconds = 5.0
     }
 }

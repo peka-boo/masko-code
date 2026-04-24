@@ -66,13 +66,12 @@ struct PermissionContentView: View {
         }
         .onAppear {
             // Auto-start: check global auto-allow first, then session-scoped
-            if !isPlan && !isQuestion && !state.autoAllowEnabled {
+            if !isPlan && !isQuestion && !state.isCountdownActive {
                 if store.globalAutoAllow {
                     state.autoAllowEnabled = true
                     startAutoAllowTimer()
                 } else if let sessionId = permission.event.sessionId,
                           store.isSessionAutoAllow(sessionId) {
-                    state.autoAllowEnabled = true
                     startAutoAllowTimer()
                 }
             }
@@ -688,6 +687,7 @@ struct PermissionContentView: View {
             // Auto-allow row (global, 5s countdown)
             AutoAllowRow(
                 isEnabled: state.autoAllowEnabled,
+                isCountdownActive: state.isCountdownActive,
                 remainingSeconds: state.autoAllowRemainingSeconds,
                 onToggle: {
                     state.autoAllowEnabled.toggle()
@@ -707,8 +707,7 @@ struct PermissionContentView: View {
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
                             store.setSessionAutoAllow(sessionId, enabled: newValue)
-                            if newValue && !state.autoAllowEnabled {
-                                state.autoAllowEnabled = true
+                            if newValue && !state.isCountdownActive {
                                 startAutoAllowTimer()
                             }
                         }
@@ -948,6 +947,7 @@ struct PermissionContentView: View {
     // MARK: - Auto-Allow Timer
 
     private func startAutoAllowTimer() {
+        state.isCountdownActive = true
         state.autoAllowStartDate = Date()
         state.autoAllowRemainingSeconds = 5.0
         state.autoAllowTimer?.invalidate()
@@ -971,6 +971,7 @@ struct PermissionContentView: View {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = nil
         state.autoAllowStartDate = nil
+        state.isCountdownActive = false
         state.autoAllowRemainingSeconds = 5.0
     }
 }

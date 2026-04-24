@@ -31,6 +31,7 @@ struct ExpandedPermissionView: View {
 
     // Auto-allow state
     @State private var autoAllowEnabled = false
+    @State private var isCountdownActive = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
@@ -97,8 +98,7 @@ struct ExpandedPermissionView: View {
                             get: { pendingPermissionStore.isSessionAutoAllow(sessionId) },
                             set: { newValue in
                                 pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
-                                if newValue && !autoAllowEnabled {
-                                    autoAllowEnabled = true
+                                if newValue && !isCountdownActive {
                                     startAutoAllowTimer()
                                 }
                             }
@@ -133,13 +133,12 @@ struct ExpandedPermissionView: View {
         .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
         .onAppear {
             // Auto-start: check global auto-allow first, then session-scoped
-            if !isPlan && !isQuestion && !autoAllowEnabled {
+            if !isPlan && !isQuestion && !isCountdownActive {
                 if pendingPermissionStore.globalAutoAllow {
                     autoAllowEnabled = true
                     startAutoAllowTimer()
                 } else if let sessionId = permission.event.sessionId,
                           pendingPermissionStore.isSessionAutoAllow(sessionId) {
-                    autoAllowEnabled = true
                     startAutoAllowTimer()
                 }
             }
@@ -616,8 +615,8 @@ struct ExpandedPermissionView: View {
                 Spacer()
 
                 // Countdown text when enabled
-                if autoAllowEnabled {
-                    Text("\(Int(autoAllowRemainingSeconds))s")
+                if isCountdownActive {
+                    Text("\(Int(ceil(autoAllowRemainingSeconds)))s")
                         .font(Constants.fontCallout)
                         .foregroundStyle(Constants.textMuted)
                         .monospacedDigit()
@@ -625,19 +624,18 @@ struct ExpandedPermissionView: View {
             }
 
             // Progress bar when enabled
-            if autoAllowEnabled {
+            if isCountdownActive {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background track
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Constants.border)
                             .frame(height: 4)
-                        
+
                         // Progress fill
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Constants.orangePrimary)
                             .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 4)
-                            .animation(.linear(duration: 0.1), value: autoAllowRemainingSeconds)
                     }
                 }
                 .frame(height: 4)
@@ -647,6 +645,7 @@ struct ExpandedPermissionView: View {
     }
 
     private func startAutoAllowTimer() {
+        isCountdownActive = true
         autoAllowStartDate = Date()
         autoAllowRemainingSeconds = 5.0
         autoAllowTimer?.invalidate()
@@ -670,6 +669,7 @@ struct ExpandedPermissionView: View {
         autoAllowTimer?.invalidate()
         autoAllowTimer = nil
         autoAllowStartDate = nil
+        isCountdownActive = false
         autoAllowRemainingSeconds = 5.0
     }
 

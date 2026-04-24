@@ -1140,8 +1140,12 @@ struct PermissionPromptView: View {
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
                             store.setSessionAutoAllow(sessionId, enabled: newValue)
-                            if newValue && !isCountdownActive {
-                                startAutoAllowTimer()
+                            if newValue {
+                                if !isCountdownActive {
+                                    startAutoAllowTimer()
+                                }
+                            } else {
+                                cancelAutoAllowTimer()
                             }
                         }
                     )) {

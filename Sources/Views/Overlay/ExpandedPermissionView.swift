@@ -614,8 +614,12 @@ struct ExpandedPermissionView: View {
                         Button {
                             let newValue = !pendingPermissionStore.isSessionAutoAllow(sessionId)
                             pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
-                            if newValue && !isCountdownActive {
-                                startAutoAllowTimer()
+                            if newValue {
+                                if !isCountdownActive {
+                                    startAutoAllowTimer()
+                                }
+                            } else {
+                                cancelAutoAllowTimer()
                             }
                         } label: {
                             Image(systemName: pendingPermissionStore.isSessionAutoAllow(sessionId) ? "checkmark.square.fill" : "square")

@@ -714,8 +714,12 @@ struct PermissionContentView: View {
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
                             store.setSessionAutoAllow(sessionId, enabled: newValue)
-                            if newValue && !state.isCountdownActive {
-                                startAutoAllowTimer()
+                            if newValue {
+                                if !state.isCountdownActive {
+                                    startAutoAllowTimer()
+                                }
+                            } else {
+                                cancelAutoAllowTimer()
                             }
                         }
                     )) {

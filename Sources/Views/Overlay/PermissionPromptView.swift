@@ -210,7 +210,6 @@ struct AutoAllowRow: View {
                         RoundedRectangle(cornerRadius: 2)
                             .fill(OverlayStyle.orange)
                             .frame(width: geometry.size.width * (remainingSeconds / 5.0), height: 3)
-                            .animation(.linear(duration: 0.1), value: remainingSeconds)
                     }
                 }
                 .frame(height: 3)
@@ -999,6 +998,7 @@ struct PermissionPromptView: View {
     @State private var autoAllowEnabled = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
+    @State private var autoAllowStartDate: Date?
 
     var body: some View {
         if permission.event.toolName == "ExitPlanMode" {
@@ -1131,7 +1131,13 @@ struct PermissionPromptView: View {
                 HStack {
                     Toggle(isOn: Binding(
                         get: { store.isSessionAutoAllow(sessionId) },
-                        set: { store.setSessionAutoAllow(sessionId, enabled: $0) }
+                        set: { newValue in
+                            store.setSessionAutoAllow(sessionId, enabled: newValue)
+                            if newValue && !autoAllowEnabled {
+                                autoAllowEnabled = true
+                                startAutoAllowTimer()
+                            }
+                        }
                     )) {
                         Text("Auto-allow this session")
                             .font(Constants.fontFootnote)
@@ -1251,13 +1257,17 @@ struct PermissionPromptView: View {
     // MARK: - Auto-Allow Timer Functions
 
     private func startAutoAllowTimer() {
+        autoAllowStartDate = Date()
         autoAllowRemainingSeconds = 5.0
         autoAllowTimer?.invalidate()
-        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                if autoAllowRemainingSeconds > 0 {
-                    autoAllowRemainingSeconds -= 1.0
-                    if autoAllowRemainingSeconds <= 0 {
+                if let startDate = autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
                         cancelAutoAllowTimer()
                         onDecision(.allow)
                     }
@@ -1269,6 +1279,7 @@ struct PermissionPromptView: View {
     private func cancelAutoAllowTimer() {
         autoAllowTimer?.invalidate()
         autoAllowTimer = nil
+        autoAllowStartDate = nil
         autoAllowRemainingSeconds = 5.0
     }
 }

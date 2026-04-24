@@ -33,6 +33,7 @@ struct ExpandedPermissionView: View {
     @State private var autoAllowEnabled = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
+    @State private var autoAllowStartDate: Date?
 
     private var isPlan: Bool { permission.event.toolName == "ExitPlanMode" }
     private var isQuestion: Bool { permission.parsedQuestions != nil && !(permission.parsedQuestions ?? []).isEmpty }
@@ -94,7 +95,13 @@ struct ExpandedPermissionView: View {
                     HStack {
                         Toggle(isOn: Binding(
                             get: { pendingPermissionStore.isSessionAutoAllow(sessionId) },
-                            set: { pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: $0) }
+                            set: { newValue in
+                                pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
+                                if newValue && !autoAllowEnabled {
+                                    autoAllowEnabled = true
+                                    startAutoAllowTimer()
+                                }
+                            }
                         )) {
                             Text("Auto-allow this session")
                                 .font(Constants.fontBody)
@@ -640,13 +647,17 @@ struct ExpandedPermissionView: View {
     }
 
     private func startAutoAllowTimer() {
+        autoAllowStartDate = Date()
         autoAllowRemainingSeconds = 5.0
         autoAllowTimer?.invalidate()
-        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                if autoAllowRemainingSeconds > 0 {
-                    autoAllowRemainingSeconds -= 1.0
-                    if autoAllowRemainingSeconds <= 0 {
+                if let startDate = autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
                         cancelAutoAllowTimer()
                         performApprove()
                     }
@@ -658,6 +669,7 @@ struct ExpandedPermissionView: View {
     private func cancelAutoAllowTimer() {
         autoAllowTimer?.invalidate()
         autoAllowTimer = nil
+        autoAllowStartDate = nil
         autoAllowRemainingSeconds = 5.0
     }
 

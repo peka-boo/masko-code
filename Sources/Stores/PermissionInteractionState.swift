@@ -29,6 +29,7 @@ final class PermissionInteractionState {
     var autoAllowEnabled: Bool = false
     var autoAllowRemainingSeconds: Double = 5.0
     var autoAllowTimer: Timer?
+    var autoAllowStartDate: Date?
 
     /// Build answers dict from current question state.
     func buildAnswers(for questions: [ParsedQuestion]) -> [String: String] {

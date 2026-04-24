@@ -705,7 +705,13 @@ struct PermissionContentView: View {
                 HStack {
                     Toggle(isOn: Binding(
                         get: { store.isSessionAutoAllow(sessionId) },
-                        set: { store.setSessionAutoAllow(sessionId, enabled: $0) }
+                        set: { newValue in
+                            store.setSessionAutoAllow(sessionId, enabled: newValue)
+                            if newValue && !state.autoAllowEnabled {
+                                state.autoAllowEnabled = true
+                                startAutoAllowTimer()
+                            }
+                        }
                     )) {
                         Text("Auto-allow this session")
                             .font(Constants.fontFootnote)
@@ -942,13 +948,17 @@ struct PermissionContentView: View {
     // MARK: - Auto-Allow Timer
 
     private func startAutoAllowTimer() {
+        state.autoAllowStartDate = Date()
         state.autoAllowRemainingSeconds = 5.0
         state.autoAllowTimer?.invalidate()
-        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                if state.autoAllowRemainingSeconds > 0 {
-                    state.autoAllowRemainingSeconds -= 1.0
-                    if state.autoAllowRemainingSeconds <= 0 {
+                if let startDate = state.autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    state.autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
                         cancelAutoAllowTimer()
                         onDecision(.allow)
                     }
@@ -960,6 +970,7 @@ struct PermissionContentView: View {
     private func cancelAutoAllowTimer() {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = nil
+        state.autoAllowStartDate = nil
         state.autoAllowRemainingSeconds = 5.0
     }
 }

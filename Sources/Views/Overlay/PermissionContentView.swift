@@ -685,24 +685,31 @@ struct PermissionContentView: View {
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
             // Auto-allow row (global, 5s countdown)
-            AutoAllowRow(
-                isEnabled: state.autoAllowEnabled,
-                isCountdownActive: state.isCountdownActive,
-                remainingSeconds: state.autoAllowRemainingSeconds,
-                onToggle: {
-                    state.autoAllowEnabled.toggle()
-                    store.globalAutoAllow = state.autoAllowEnabled
-                    if state.autoAllowEnabled {
-                        startAutoAllowTimer()
-                    } else {
-                        cancelAutoAllowTimer()
+            // Auto-allow toggles row: global left, session right
+            HStack {
+                // Left: global auto-allow
+                Toggle(isOn: Binding(
+                    get: { state.autoAllowEnabled },
+                    set: { _ in
+                        state.autoAllowEnabled.toggle()
+                        store.globalAutoAllow = state.autoAllowEnabled
+                        if state.autoAllowEnabled {
+                            startAutoAllowTimer()
+                        } else {
+                            cancelAutoAllowTimer()
+                        }
                     }
+                )) {
+                    Text("Auto-allow")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
                 }
-            )
+                .buttonStyle(.plain)
 
-            // Session auto-allow toggle
-            if let sessionId = permission.event.sessionId {
-                HStack {
+                Spacer()
+
+                // Right: session auto-allow
+                if let sessionId = permission.event.sessionId {
                     Toggle(isOn: Binding(
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
@@ -712,12 +719,34 @@ struct PermissionContentView: View {
                             }
                         }
                     )) {
-                        Text("Auto-allow this session")
+                        Text("This session")
                             .font(Constants.fontFootnote)
                             .foregroundStyle(OverlayStyle.textMuted)
                     }
                     .buttonStyle(.plain)
-                    Spacer()
+                }
+            }
+
+            // Countdown progress bar
+            if state.isCountdownActive {
+                HStack {
+                    Text("\(Int(ceil(state.autoAllowRemainingSeconds)))s")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
+                        .monospacedDigit()
+
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.textPrimary.opacity(0.1))
+                                .frame(height: 3)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.orange)
+                                .frame(width: geometry.size.width * (state.autoAllowRemainingSeconds / 5.0), height: 3)
+                        }
+                    }
+                    .frame(height: 3)
                 }
             }
 

@@ -1113,25 +1113,29 @@ struct PermissionPromptView: View {
             // Buttons: Allow / Deny
             let suggestions = permission.permissionSuggestions
 
-            // Auto-allow row
-            AutoAllowRow(
-                isEnabled: autoAllowEnabled,
-                isCountdownActive: isCountdownActive,
-                remainingSeconds: autoAllowRemainingSeconds,
-                onToggle: {
-                    autoAllowEnabled.toggle()
-                    store.globalAutoAllow = autoAllowEnabled
-                    if autoAllowEnabled {
-                        startAutoAllowTimer()
-                    } else {
-                        cancelAutoAllowTimer()
+            // Auto-allow toggles row: global left, session right
+            HStack {
+                Toggle(isOn: Binding(
+                    get: { autoAllowEnabled },
+                    set: { _ in
+                        autoAllowEnabled.toggle()
+                        store.globalAutoAllow = autoAllowEnabled
+                        if autoAllowEnabled {
+                            startAutoAllowTimer()
+                        } else {
+                            cancelAutoAllowTimer()
+                        }
                     }
+                )) {
+                    Text("Auto-allow")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
                 }
-            )
+                .buttonStyle(.plain)
 
-            // Session auto-allow toggle
-            if let sessionId = permission.event.sessionId {
-                HStack {
+                Spacer()
+
+                if let sessionId = permission.event.sessionId {
                     Toggle(isOn: Binding(
                         get: { store.isSessionAutoAllow(sessionId) },
                         set: { newValue in
@@ -1141,12 +1145,34 @@ struct PermissionPromptView: View {
                             }
                         }
                     )) {
-                        Text("Auto-allow this session")
+                        Text("This session")
                             .font(Constants.fontFootnote)
                             .foregroundStyle(OverlayStyle.textMuted)
                     }
                     .buttonStyle(.plain)
-                    Spacer()
+                }
+            }
+
+            // Countdown progress bar
+            if isCountdownActive {
+                HStack {
+                    Text("\(Int(ceil(autoAllowRemainingSeconds)))s")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
+                        .monospacedDigit()
+
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.textPrimary.opacity(0.1))
+                                .frame(height: 3)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.orange)
+                                .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 3)
+                        }
+                    }
+                    .frame(height: 3)
                 }
             }
 

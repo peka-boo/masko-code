@@ -88,29 +88,8 @@ struct ExpandedPermissionView: View {
 
             // Action bar
             VStack(spacing: 12) {
-                // Auto-allow row
+                // Auto-allow toggles row: global left, session right
                 autoAllowRow
-
-                // Session auto-allow toggle
-                if let sessionId = permission.event.sessionId {
-                    HStack {
-                        Toggle(isOn: Binding(
-                            get: { pendingPermissionStore.isSessionAutoAllow(sessionId) },
-                            set: { newValue in
-                                pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
-                                if newValue && !isCountdownActive {
-                                    startAutoAllowTimer()
-                                }
-                            }
-                        )) {
-                            Text("Auto-allow this session")
-                                .font(Constants.fontBody)
-                                .foregroundStyle(Constants.textMuted)
-                        }
-                        .buttonStyle(.plain)
-                        Spacer()
-                    }
-                }
 
                 if isPlan {
                     planActions
@@ -589,8 +568,9 @@ struct ExpandedPermissionView: View {
 
     private var autoAllowRow: some View {
         VStack(spacing: 8) {
-            // Checkbox row
-            HStack(spacing: 10) {
+            // Checkbox row: global left, session right
+            HStack {
+                // Left: global auto-allow
                 Button {
                     autoAllowEnabled.toggle()
                     pendingPermissionStore.globalAutoAllow = autoAllowEnabled
@@ -621,18 +601,40 @@ struct ExpandedPermissionView: View {
                         .foregroundStyle(Constants.textMuted)
                         .monospacedDigit()
                 }
+
+                Spacer()
+
+                // Right: session auto-allow
+                if let sessionId = permission.event.sessionId {
+                    HStack(spacing: 8) {
+                        Text("This session")
+                            .font(Constants.fontBody)
+                            .foregroundStyle(Constants.textPrimary)
+
+                        Button {
+                            let newValue = !pendingPermissionStore.isSessionAutoAllow(sessionId)
+                            pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
+                            if newValue && !isCountdownActive {
+                                startAutoAllowTimer()
+                            }
+                        } label: {
+                            Image(systemName: pendingPermissionStore.isSessionAutoAllow(sessionId) ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(pendingPermissionStore.isSessionAutoAllow(sessionId) ? Constants.orangePrimary : Constants.textMuted)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             }
 
             // Progress bar when enabled
             if isCountdownActive {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        // Background track
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Constants.border)
                             .frame(height: 4)
 
-                        // Progress fill
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Constants.orangePrimary)
                             .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 4)
@@ -641,7 +643,6 @@ struct ExpandedPermissionView: View {
                 .frame(height: 4)
             }
         }
-        .padding(.horizontal, 0)
     }
 
     private func startAutoAllowTimer() {

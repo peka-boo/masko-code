@@ -124,6 +124,19 @@ struct ExpandedPermissionView: View {
                 .stroke(Constants.border, lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
+        .onAppear {
+            // Auto-start: check global auto-allow first, then session-scoped
+            if !isPlan && !isQuestion && !autoAllowEnabled {
+                if pendingPermissionStore.globalAutoAllow {
+                    autoAllowEnabled = true
+                    startAutoAllowTimer()
+                } else if let sessionId = permission.event.sessionId,
+                          pendingPermissionStore.isSessionAutoAllow(sessionId) {
+                    autoAllowEnabled = true
+                    startAutoAllowTimer()
+                }
+            }
+        }
         .onDisappear {
             cancelAutoAllowTimer()
         }
@@ -574,6 +587,7 @@ struct ExpandedPermissionView: View {
             HStack(spacing: 10) {
                 Button {
                     autoAllowEnabled.toggle()
+                    pendingPermissionStore.globalAutoAllow = autoAllowEnabled
                     if autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {

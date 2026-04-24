@@ -64,6 +64,22 @@ struct PermissionContentView: View {
                 compactLayout
             }
         }
+        .onAppear {
+            // Auto-start: check global auto-allow first, then session-scoped
+            if !isPlan && !isQuestion && !state.autoAllowEnabled {
+                if store.globalAutoAllow {
+                    state.autoAllowEnabled = true
+                    startAutoAllowTimer()
+                } else if let sessionId = permission.event.sessionId,
+                          store.isSessionAutoAllow(sessionId) {
+                    state.autoAllowEnabled = true
+                    startAutoAllowTimer()
+                }
+            }
+        }
+        .onDisappear {
+            cancelAutoAllowTimer()
+        }
         .onChange(of: hotkeyManager.selectedButtonIndex) { _, newIdx in
             guard showShortcuts || isExpanded, let idx = newIdx else { return }
             handleShortcutSelection(idx)
@@ -669,12 +685,13 @@ struct PermissionContentView: View {
 
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
-            // Auto-allow row (one-time, 5s countdown)
+            // Auto-allow row (global, 5s countdown)
             AutoAllowRow(
                 isEnabled: state.autoAllowEnabled,
                 remainingSeconds: state.autoAllowRemainingSeconds,
                 onToggle: {
                     state.autoAllowEnabled.toggle()
+                    store.globalAutoAllow = state.autoAllowEnabled
                     if state.autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {

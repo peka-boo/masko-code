@@ -373,6 +373,9 @@ final class PendingPermissionStore {
     /// Sessions where user enabled "auto-allow for this session" — all future permissions auto-allowed
     private(set) var sessionAutoAllow: Set<String> = []
 
+    /// Global auto-allow toggle (persists across all permissions until disabled)
+    var globalAutoAllow: Bool = false
+
     init() {
         startLivenessChecks()
     }
@@ -394,21 +397,6 @@ final class PendingPermissionStore {
             resolvedToolUseId = preToolUseCache.removeValue(forKey: key)
         }
         if isDuplicate(event: event, resolvedToolUseId: resolvedToolUseId) {
-            return
-        }
-
-        // Auto-allow for sessions where user enabled it
-        if let sessionId = event.sessionId, sessionAutoAllow.contains(sessionId) {
-            let permission = PendingPermission(
-                id: UUID(),
-                event: event,
-                transport: transport,
-                receivedAt: Date(),
-                resolvedToolUseId: resolvedToolUseId
-            )
-            print("[masko-desktop] Session auto-allow: \(event.toolName ?? "unknown") in session \(sessionId)")
-            permission.transport.sendDecision(.allow)
-            onResolved?(event, .allowed)
             return
         }
 

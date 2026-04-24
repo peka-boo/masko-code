@@ -1117,6 +1117,7 @@ struct PermissionPromptView: View {
                 remainingSeconds: autoAllowRemainingSeconds,
                 onToggle: {
                     autoAllowEnabled.toggle()
+                    store.globalAutoAllow = autoAllowEnabled
                     if autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {
@@ -1227,6 +1228,19 @@ struct PermissionPromptView: View {
             } else {
                 // No suggestion selected — ⌘↩ means Allow
                 onDecision(.allow)
+            }
+        }
+        .onAppear {
+            // Auto-start: check global auto-allow first, then session-scoped
+            if !autoAllowEnabled {
+                if store.globalAutoAllow {
+                    autoAllowEnabled = true
+                    startAutoAllowTimer()
+                } else if let sessionId = permission.event.sessionId,
+                          store.isSessionAutoAllow(sessionId) {
+                    autoAllowEnabled = true
+                    startAutoAllowTimer()
+                }
             }
         }
         .onDisappear {

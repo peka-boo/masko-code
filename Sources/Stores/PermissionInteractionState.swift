@@ -59,4 +59,8 @@ final class PermissionInteractionState {
             return selections[q.question] != nil
         }
     }
+
+    deinit {
+        autoAllowTimer?.invalidate()
+    }
 }

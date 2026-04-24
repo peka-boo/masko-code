@@ -690,10 +690,10 @@ struct PermissionContentView: View {
                 // Left: global auto-allow
                 Toggle(isOn: Binding(
                     get: { state.autoAllowEnabled },
-                    set: { _ in
-                        state.autoAllowEnabled.toggle()
-                        store.globalAutoAllow = state.autoAllowEnabled
-                        if state.autoAllowEnabled {
+                    set: { newValue in
+                        state.autoAllowEnabled = newValue
+                        store.globalAutoAllow = newValue
+                        if newValue {
                             startAutoAllowTimer()
                         } else {
                             cancelAutoAllowTimer()
@@ -986,6 +986,7 @@ struct PermissionContentView: View {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
+                guard state.isCountdownActive else { return }
                 if let startDate = state.autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
                     let remaining = max(0, 5.0 - elapsed)

@@ -1117,10 +1117,10 @@ struct PermissionPromptView: View {
             HStack {
                 Toggle(isOn: Binding(
                     get: { autoAllowEnabled },
-                    set: { _ in
-                        autoAllowEnabled.toggle()
-                        store.globalAutoAllow = autoAllowEnabled
-                        if autoAllowEnabled {
+                    set: { newValue in
+                        autoAllowEnabled = newValue
+                        store.globalAutoAllow = newValue
+                        if newValue {
                             startAutoAllowTimer()
                         } else {
                             cancelAutoAllowTimer()
@@ -1294,6 +1294,7 @@ struct PermissionPromptView: View {
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
+                guard isCountdownActive else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
                     let remaining = max(0, 5.0 - elapsed)

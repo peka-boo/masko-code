@@ -656,6 +656,7 @@ struct ExpandedPermissionView: View {
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
+                guard isCountdownActive else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
                     let remaining = max(0, 5.0 - elapsed)

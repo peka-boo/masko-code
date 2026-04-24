@@ -1119,7 +1119,7 @@ struct PermissionPromptView: View {
                     get: { autoAllowEnabled },
                     set: { newValue in
                         autoAllowEnabled = newValue
-                        store.globalAutoAllow = newValue
+                        store.setGlobalAutoAllow(newValue)
                         if newValue {
                             startAutoAllowTimer()
                         } else {

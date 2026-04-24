@@ -497,6 +497,22 @@ final class PendingPermissionStore {
         }
     }
 
+    func setGlobalAutoAllow(_ enabled: Bool) {
+        globalAutoAllow = enabled
+        // Sync all existing pending permissions' auto-allow state
+        for perm in pending {
+            let state = interactionState(for: perm.id)
+            state.autoAllowEnabled = enabled
+            if !enabled {
+                state.isCountdownActive = false
+                state.autoAllowTimer?.invalidate()
+                state.autoAllowTimer = nil
+                state.autoAllowStartDate = nil
+                state.autoAllowRemainingSeconds = 5.0
+            }
+        }
+    }
+
     func setSessionAutoAllow(_ sessionId: String, enabled: Bool) {
         if enabled {
             sessionAutoAllow.insert(sessionId)

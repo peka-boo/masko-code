@@ -64,6 +64,12 @@ struct PermissionContentView: View {
                 compactLayout
             }
         }
+        .onChange(of: state.autoAllowEnabled) { _, newValue in
+            // Synced from another prompt's global toggle — start countdown if needed
+            if newValue && !isPlan && !isQuestion && !state.isCountdownActive {
+                startAutoAllowTimer()
+            }
+        }
         .onAppear {
             // Auto-start: check global auto-allow first, then session-scoped
             if !isPlan && !isQuestion && !state.isCountdownActive {
@@ -692,7 +698,7 @@ struct PermissionContentView: View {
                     get: { state.autoAllowEnabled },
                     set: { newValue in
                         state.autoAllowEnabled = newValue
-                        store.globalAutoAllow = newValue
+                        store.setGlobalAutoAllow(newValue)
                         if newValue {
                             startAutoAllowTimer()
                         } else {

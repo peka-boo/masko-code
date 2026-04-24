@@ -573,7 +573,7 @@ struct ExpandedPermissionView: View {
                 // Left: global auto-allow
                 Button {
                     autoAllowEnabled.toggle()
-                    pendingPermissionStore.globalAutoAllow = autoAllowEnabled
+                    pendingPermissionStore.setGlobalAutoAllow(autoAllowEnabled)
                     if autoAllowEnabled {
                         startAutoAllowTimer()
                     } else {

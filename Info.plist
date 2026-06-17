@@ -27,7 +27,7 @@
     <key>ATSApplicationFontsPath</key>
     <string>Fonts</string>
     <key>SUFeedURL</key>
-    <string>https://pekaboo.github.io/masko-code/appcast.xml</string>
+    <string>https://raw.githubusercontent.com/pekaboo/masko-code/main/appcast.xml</string>
     <key>SUPublicEDKey</key>
     <string>f1B4HX5kn15v+vGmIK96dR0gLS9HGuE6/nEXVgkug9M=</string>
     <key>NSAppleEventsUsageDescription</key>

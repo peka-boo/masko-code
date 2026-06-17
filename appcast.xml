@@ -11,7 +11,7 @@
             <sparkle:shortVersionString>0.14.5</sparkle:shortVersionString>
             <sparkle:releaseNotesLink>https://github.com/pekaboo/masko-code/releases/tag/v0.14.5</sparkle:releaseNotesLink>
             <pubDate>Wed, 17 Jun 2026 12:00:00 +0000</pubDate>
-            <enclosure url="https://github.com/pekaboo/masko-code/releases/download/v0.14.5/Masko.Code.dmg" length="4050003" type="application/octet-stream" sparkle:edSignature="rBXx969vIeN5h9PIjx7y4YwSX212m+zKJ9M/GDDP4QM0vUH+QBxlz5hT1Uv7vZpRTDgFhpGhPRG28Sw6GVC4AA==" />
+            <enclosure url="https://github.com/pekaboo/masko-code/releases/download/v0.14.5/Masko.Code.dmg" length="4050015" type="application/octet-stream" sparkle:edSignature="aY/p9tbJnhw/2E1fiNjBKpKRtfmwljMFRDEX6XAWSAPViB1xafesAlTpY5ewEkZlu2VRQHKkFlckp3RbsMAFCw==" />
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
         </item>
     </channel>

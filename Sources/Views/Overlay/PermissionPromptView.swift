@@ -998,6 +998,7 @@ struct PermissionPromptView: View {
     // Auto-allow state
     @State private var autoAllowEnabled = false
     @State private var isCountdownActive = false
+    @State private var isHoverPaused = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
@@ -1303,18 +1304,30 @@ struct PermissionPromptView: View {
         .onDisappear {
             cancelAutoAllowTimer()
         }
+        .onHover { hovering in
+            if hovering {
+                pauseForHover()
+            } else {
+                resumeFromHover()
+            }
+        }
     }
 
     // MARK: - Auto-Allow Timer Functions
 
     private func startAutoAllowTimer() {
         isCountdownActive = true
+        isHoverPaused = false
         autoAllowStartDate = Date()
         autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
+        startTimerTicks()
+    }
+
+    private func startTimerTicks() {
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                guard isCountdownActive else { return }
+                guard isCountdownActive, !isHoverPaused else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
                     let total = store.globalAutoAllowDelaySeconds
@@ -1330,11 +1343,29 @@ struct PermissionPromptView: View {
         }
     }
 
+    private func pauseForHover() {
+        guard isCountdownActive, !isHoverPaused else { return }
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        isHoverPaused = true
+    }
+
+    private func resumeFromHover() {
+        guard isHoverPaused else { return }
+        isHoverPaused = false
+        let total = store.globalAutoAllowDelaySeconds
+        let remaining = min(autoAllowRemainingSeconds, total)
+        autoAllowRemainingSeconds = remaining
+        autoAllowStartDate = Date().addingTimeInterval(remaining - total)
+        startTimerTicks()
+    }
+
     private func cancelAutoAllowTimer() {
         autoAllowTimer?.invalidate()
         autoAllowTimer = nil
         autoAllowStartDate = nil
         isCountdownActive = false
+        isHoverPaused = false
         autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
     }
 }

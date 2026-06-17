@@ -32,6 +32,7 @@ struct ExpandedPermissionView: View {
     // Auto-allow state
     @State private var autoAllowEnabled = false
     @State private var isCountdownActive = false
+    @State private var isHoverPaused = false
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
@@ -678,12 +679,46 @@ struct ExpandedPermissionView: View {
 
     private func startAutoAllowTimer() {
         isCountdownActive = true
+        isHoverPaused = false
         autoAllowStartDate = Date()
         autoAllowRemainingSeconds = pendingPermissionStore.globalAutoAllowDelaySeconds
+        startTimerTicks()
+    }
+
+    private func cancelAutoAllowTimer() {
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        autoAllowStartDate = nil
+        isCountdownActive = false
+        isHoverPaused = false
+        autoAllowRemainingSeconds = pendingPermissionStore.globalAutoAllowDelaySeconds
+    }
+
+    /// Pause countdown while the user is hovering over the overlay.
+    private func pauseForHover() {
+        guard isCountdownActive, !isHoverPaused else { return }
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        isHoverPaused = true
+    }
+
+    /// Resume countdown from where it was paused.
+    private func resumeFromHover() {
+        guard isHoverPaused else { return }
+        isHoverPaused = false
+        let total = pendingPermissionStore.globalAutoAllowDelaySeconds
+        let remaining = min(autoAllowRemainingSeconds, total)
+        autoAllowRemainingSeconds = remaining
+        // Shift startDate so elapsed = total - remaining
+        autoAllowStartDate = Date().addingTimeInterval(remaining - total)
+        startTimerTicks()
+    }
+
+    private func startTimerTicks() {
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                guard isCountdownActive else { return }
+                guard isCountdownActive, !isHoverPaused else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
                     let total = pendingPermissionStore.globalAutoAllowDelaySeconds
@@ -697,14 +732,6 @@ struct ExpandedPermissionView: View {
                 }
             }
         }
-    }
-
-    private func cancelAutoAllowTimer() {
-        autoAllowTimer?.invalidate()
-        autoAllowTimer = nil
-        autoAllowStartDate = nil
-        isCountdownActive = false
-        autoAllowRemainingSeconds = pendingPermissionStore.globalAutoAllowDelaySeconds
     }
 
     // MARK: - Shared Action Buttons (Plan + Standard)
@@ -776,5 +803,12 @@ struct ExpandedPermissionView: View {
             .disabled(isPlan && selectedOption == 3 && feedbackText.isEmpty)
         }
         .animation(.easeInOut(duration: 0.15), value: showShortcuts)
+        .onHover { hovering in
+            if hovering {
+                pauseForHover()
+            } else {
+                resumeFromHover()
+            }
+        }
     }
 }

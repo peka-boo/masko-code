@@ -18,7 +18,6 @@ struct SettingsView: View {
     @State private var installingIDE: String?  // command of IDE currently being installed
     @State private var autoHideDelayText: String = "15"
     @State private var showConnectionDoctor = false
-    @AppStorage("autoAllowDelaySeconds") private var autoAllowDelaySeconds: Double = 5.0
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
@@ -139,29 +138,6 @@ struct SettingsView: View {
                                 autoHideDelayText = String(Int(overlayManager.autoHideDelay))
                             }
                     }
-                }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text("Auto-allow countdown")
-                            .foregroundColor(Constants.textPrimary)
-                        Spacer()
-                        Text("\(Int(autoAllowDelaySeconds))s")
-                            .font(Constants.fontBody.monospacedDigit())
-                            .foregroundColor(Constants.textMuted)
-                    }
-                    Slider(value: $autoAllowDelaySeconds, in: 1...5, step: 1) {
-                        Text("Auto-allow countdown")
-                    } minimumValueLabel: {
-                        Text("1s").font(.system(size: 10)).foregroundColor(Constants.textMuted)
-                    } maximumValueLabel: {
-                        Text("5s").font(.system(size: 10)).foregroundColor(Constants.textMuted)
-                    }
-                    .tint(Constants.orangePrimary)
-
-                    Text("How long to wait before auto-approving permissions when auto-allow is on.")
-                        .font(Constants.fontFootnote)
-                        .foregroundColor(Constants.textMuted)
                 }
             } header: {
                 Text("Claude Code").font(Constants.fontHeadline)

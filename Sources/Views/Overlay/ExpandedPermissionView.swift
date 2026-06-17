@@ -35,6 +35,7 @@ struct ExpandedPermissionView: View {
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
+    @AppStorage("autoAllowDelaySeconds") private var delaySeconds: Double = 5.0
 
     private var isPlan: Bool { permission.event.toolName == "ExitPlanMode" }
     private var isQuestion: Bool { permission.parsedQuestions != nil && !(permission.parsedQuestions ?? []).isEmpty }
@@ -568,6 +569,9 @@ struct ExpandedPermissionView: View {
 
     private var autoAllowRow: some View {
         VStack(spacing: 8) {
+            // Delay slider row (global setting, persisted)
+            delaySliderRow
+
             // Checkbox row: global left, session right
             HStack {
                 // Left: global auto-allow
@@ -641,7 +645,7 @@ struct ExpandedPermissionView: View {
 
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Constants.orangePrimary)
-                            .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 4)
+                            .frame(width: geometry.size.width * (autoAllowRemainingSeconds / pendingPermissionStore.globalAutoAllowDelaySeconds), height: 4)
                     }
                 }
                 .frame(height: 4)
@@ -649,17 +653,41 @@ struct ExpandedPermissionView: View {
         }
     }
 
+    // MARK: - Delay Slider Row
+
+    private var delaySliderRow: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "timer")
+                .font(.system(size: 12))
+                .foregroundStyle(Constants.textMuted)
+                .frame(width: 14)
+
+            Slider(value: $delaySeconds, in: 1...5, step: 1) { editing in
+                if !editing && isCountdownActive {
+                    startAutoAllowTimer()
+                }
+            }
+            .tint(Constants.orangePrimary)
+
+            Text("\(Int(delaySeconds))s")
+                .font(Constants.fontCallout.monospacedDigit())
+                .foregroundStyle(Constants.textPrimary)
+                .frame(width: 28, alignment: .trailing)
+        }
+    }
+
     private func startAutoAllowTimer() {
         isCountdownActive = true
         autoAllowStartDate = Date()
-        autoAllowRemainingSeconds = 5.0
+        autoAllowRemainingSeconds = pendingPermissionStore.globalAutoAllowDelaySeconds
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
                 guard isCountdownActive else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
-                    let remaining = max(0, 5.0 - elapsed)
+                    let total = pendingPermissionStore.globalAutoAllowDelaySeconds
+                    let remaining = max(0, total - elapsed)
                     autoAllowRemainingSeconds = remaining
 
                     if remaining <= 0 {
@@ -676,7 +704,7 @@ struct ExpandedPermissionView: View {
         autoAllowTimer = nil
         autoAllowStartDate = nil
         isCountdownActive = false
-        autoAllowRemainingSeconds = 5.0
+        autoAllowRemainingSeconds = pendingPermissionStore.globalAutoAllowDelaySeconds
     }
 
     // MARK: - Shared Action Buttons (Plan + Standard)

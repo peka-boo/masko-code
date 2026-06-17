@@ -376,6 +376,21 @@ final class PendingPermissionStore {
     /// Global auto-allow toggle (persists across all permissions until disabled)
     var globalAutoAllow: Bool = false
 
+    /// Countdown duration (seconds) used by auto-allow before automatically approving.
+    /// Persisted across launches. Allowed values: 1...5, default 5.
+    var globalAutoAllowDelaySeconds: Double {
+        get {
+            let stored = UserDefaults.standard.double(forKey: Self.autoAllowDelayKey)
+            return stored > 0 ? stored : 5.0
+        }
+        set {
+            let clamped = min(max(1.0, newValue.rounded()), 5.0)
+            UserDefaults.standard.set(clamped, forKey: Self.autoAllowDelayKey)
+        }
+    }
+
+    private static let autoAllowDelayKey = "autoAllowDelaySeconds"
+
     init() {
         startLivenessChecks()
     }
@@ -508,7 +523,7 @@ final class PendingPermissionStore {
                 state.autoAllowTimer?.invalidate()
                 state.autoAllowTimer = nil
                 state.autoAllowStartDate = nil
-                state.autoAllowRemainingSeconds = 5.0
+                state.autoAllowRemainingSeconds = globalAutoAllowDelaySeconds
             }
         }
     }

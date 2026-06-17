@@ -1001,6 +1001,7 @@ struct PermissionPromptView: View {
     @State private var autoAllowRemainingSeconds: Double = 5.0
     @State private var autoAllowTimer: Timer?
     @State private var autoAllowStartDate: Date?
+    @AppStorage("autoAllowDelaySeconds") private var delaySeconds: Double = 5.0
 
     var body: some View {
         if permission.event.toolName == "ExitPlanMode" {
@@ -1113,6 +1114,25 @@ struct PermissionPromptView: View {
             // Buttons: Allow / Deny
             let suggestions = permission.permissionSuggestions
 
+            // Delay slider row (global setting, persisted)
+            HStack(spacing: 8) {
+                Image(systemName: "timer")
+                    .font(.system(size: 11))
+                    .foregroundStyle(OverlayStyle.textMuted)
+
+                Slider(value: $delaySeconds, in: 1...5, step: 1) { editing in
+                    if !editing && isCountdownActive {
+                        startAutoAllowTimer()
+                    }
+                }
+                .tint(OverlayStyle.orange)
+
+                Text("\(Int(delaySeconds))s")
+                    .font(Constants.fontFootnote.monospacedDigit())
+                    .foregroundStyle(OverlayStyle.textPrimary)
+                    .frame(width: 24, alignment: .trailing)
+            }
+
             // Auto-allow toggles row: global left, session right
             HStack {
                 Toggle(isOn: Binding(
@@ -1173,7 +1193,7 @@ struct PermissionPromptView: View {
 
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(OverlayStyle.orange)
-                                .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 3)
+                                .frame(width: geometry.size.width * (autoAllowRemainingSeconds / store.globalAutoAllowDelaySeconds), height: 3)
                         }
                     }
                     .frame(height: 3)
@@ -1290,14 +1310,15 @@ struct PermissionPromptView: View {
     private func startAutoAllowTimer() {
         isCountdownActive = true
         autoAllowStartDate = Date()
-        autoAllowRemainingSeconds = 5.0
+        autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
         autoAllowTimer?.invalidate()
         autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
                 guard isCountdownActive else { return }
                 if let startDate = autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
-                    let remaining = max(0, 5.0 - elapsed)
+                    let total = store.globalAutoAllowDelaySeconds
+                    let remaining = max(0, total - elapsed)
                     autoAllowRemainingSeconds = remaining
 
                     if remaining <= 0 {
@@ -1314,7 +1335,7 @@ struct PermissionPromptView: View {
         autoAllowTimer = nil
         autoAllowStartDate = nil
         isCountdownActive = false
-        autoAllowRemainingSeconds = 5.0
+        autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
     }
 }
 

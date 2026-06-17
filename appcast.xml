@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>Masko Code (pekaboo fork) Changelog</title>
+        <description>Most recent changes with links to updates.</description>
+        <language>en</language>
+        <item>
+            <title>Version 0.14.5</title>
+            <link>https://github.com/pekaboo/masko-code/releases</link>
+            <sparkle:version>53</sparkle:version>
+            <sparkle:shortVersionString>0.14.5</sparkle:shortVersionString>
+            <sparkle:releaseNotesLink>https://github.com/pekaboo/masko-code/releases/tag/v0.14.5</sparkle:releaseNotesLink>
+            <pubDate>Wed, 17 Jun 2026 12:00:00 +0000</pubDate>
+            <enclosure url="https://github.com/pekaboo/masko-code/releases/download/v0.14.5/Masko.Code.dmg" length="4050003" type="application/octet-stream" sparkle:edSignature="rBXx969vIeN5h9PIjx7y4YwSX212m+zKJ9M/GDDP4QM0vUH+QBxlz5hT1Uv7vZpRTDgFhpGhPRG28Sw6GVC4AA==" />
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        </item>
+    </channel>
+</rss>

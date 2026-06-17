@@ -54,7 +54,7 @@ final class PerfMonitor {
     private(set) var livingAVPlayers: Int = 0
 
     // os_signpost for Instruments integration
-    nonisolated static let signpostLog = OSLog(subsystem: "com.masko.desktop", category: "Perf")
+    nonisolated static let signpostLog = OSLog(subsystem: "com.pekaboo.maskocode", category: "Perf")
 
     private init() {
         for event in Event.allCases { counters[event] = 0 }

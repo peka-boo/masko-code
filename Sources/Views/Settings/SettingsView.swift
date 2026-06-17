@@ -584,7 +584,7 @@ struct SettingsView: View {
         try? fm.removeItem(at: cacheDir)
 
         // 5. Clear UserDefaults — all known bundle IDs (debug + release)
-        for domain in ["com.masko.desktop", "masko-code"] {
+        for domain in ["com.masko.desktop", "com.pekaboo.maskocode", "masko-code"] {
             UserDefaults.standard.removePersistentDomain(forName: domain)
         }
         if let bundleId = Bundle.main.bundleIdentifier {
@@ -593,7 +593,7 @@ struct SettingsView: View {
         UserDefaults.standard.synchronize()
 
         // 5.5. Delete preference plist files explicitly (macOS caches them)
-        for plist in ["com.masko.desktop.plist", "masko-code.plist", "masko-desktop.plist"] {
+        for plist in ["com.masko.desktop.plist", "com.pekaboo.maskocode.plist", "masko-code.plist", "masko-desktop.plist"] {
             let path = NSHomeDirectory() + "/Library/Preferences/" + plist
             try? fm.removeItem(atPath: path)
         }

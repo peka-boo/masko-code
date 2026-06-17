@@ -7,6 +7,15 @@ Package.resolved
 xcuserdata/
 DerivedData/
 
+# Build artifacts (DMG / app bundle staging)
+*.dmg
+dmg-staging/
+
+# Sparkle signing private key (DO NOT COMMIT)
+.sparkle_private_key
+*.pem
+sparkle_privkey*
+
 # Gradle (JetBrains plugin)
 .gradle/
 .kotlin/

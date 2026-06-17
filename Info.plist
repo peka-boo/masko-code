@@ -5,15 +5,15 @@
     <key>CFBundleExecutable</key>
     <string>masko-code</string>
     <key>CFBundleIdentifier</key>
-    <string>com.masko.desktop</string>
+    <string>com.pekaboo.maskocode</string>
     <key>CFBundleName</key>
     <string>Masko Code</string>
     <key>CFBundleDisplayName</key>
     <string>Masko Code</string>
     <key>CFBundleVersion</key>
-    <string>52</string>
+    <string>53</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.13.13</string>
+    <string>0.14.5</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
@@ -27,9 +27,9 @@
     <key>ATSApplicationFontsPath</key>
     <string>Fonts</string>
     <key>SUFeedURL</key>
-    <string>https://masko.ai/api/desktop/appcast</string>
+    <string>https://pekaboo.github.io/masko-code/appcast.xml</string>
     <key>SUPublicEDKey</key>
-    <string>/BVYK9Q4hZORSn/xfhu4BCCLrug5zEA5WkwXG2lgdiw=</string>
+    <string>f1B4HX5kn15v+vGmIK96dR0gLS9HGuE6/nEXVgkug9M=</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>Masko Code needs permission to switch to the correct terminal tab when you interact with permission bubbles.</string>
     <key>CFBundleURLTypes</key>
@@ -40,7 +40,7 @@
                 <string>masko</string>
             </array>
             <key>CFBundleURLName</key>
-            <string>com.masko.desktop</string>
+            <string>com.pekaboo.maskocode</string>
         </dict>
     </array>
 </dict>

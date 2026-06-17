@@ -22,7 +22,7 @@ struct MascotDetailView: View {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 12, weight: .semibold))
                             Text("Back")
-                                .font(Constants.body(size: 13, weight: .medium))
+                                .font(Constants.fontBody)
                         }
                         .foregroundColor(Constants.textMuted)
                     }
@@ -31,7 +31,7 @@ struct MascotDetailView: View {
                     Spacer()
 
                     Text(mascot.name)
-                        .font(Constants.heading(size: 18, weight: .semibold))
+                        .font(Constants.fontTitle)
                         .foregroundColor(Constants.textPrimary)
 
                     Spacer()
@@ -50,9 +50,9 @@ struct MascotDetailView: View {
                     }
                     .buttonStyle(BrandSecondaryButton())
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
+                .padding(.horizontal, Constants.contentPaddingH)
+                .padding(.top, Constants.contentPaddingV)
+                .padding(.bottom, Constants.spacingNormal)
 
                 Divider().overlay(Constants.border)
 
@@ -73,7 +73,7 @@ struct MascotDetailView: View {
                                     Image(systemName: "safari")
                                         .font(.system(size: 14))
                                     Text("View on masko.ai")
-                                        .font(Constants.body(size: 13, weight: .medium))
+                                        .font(Constants.fontBody)
                                     Spacer()
                                     Image(systemName: "arrow.up.right")
                                         .font(.system(size: 11, weight: .semibold))
@@ -90,7 +90,7 @@ struct MascotDetailView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(20)
+                    .padding(Constants.contentPaddingH)
                 }
             }
             .background(Constants.lightBackground)
@@ -106,10 +106,10 @@ struct MascotDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("States")
-                    .font(Constants.heading(size: 14, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
                 Text("\(config.nodes.count)")
-                    .font(Constants.body(size: 12, weight: .medium))
+                    .font(Constants.fontCallout)
                     .foregroundColor(Constants.textMuted)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
@@ -117,8 +117,8 @@ struct MascotDetailView: View {
             }
 
             LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 140, maximum: 200), spacing: 12)
-            ], spacing: 12) {
+                GridItem(.adaptive(minimum: 140, maximum: 200), spacing: Constants.spacingNormal)
+            ], spacing: Constants.spacingNormal) {
                 ForEach(config.nodes) { node in
                     let isInitial = node.id == config.initialNode
                     let loopEdge = loopEdges.first(where: { $0.source == node.id })
@@ -150,23 +150,23 @@ struct MascotDetailView: View {
                             }
                         }
                         .aspectRatio(1, contentMode: .fit)
-                        .padding(8)
+                        .padding(Constants.spacingTight)
 
                         // Name
                         VStack(spacing: 2) {
                             Text(node.name)
-                                .font(Constants.heading(size: 12, weight: .semibold))
+                                .font(Constants.fontHeadline)
                                 .foregroundColor(Constants.textPrimary)
                                 .lineLimit(1)
 
                             if isInitial {
                                 Text("start")
-                                    .font(Constants.body(size: 9, weight: .semibold))
+                                    .font(Constants.fontSubheadline)
                                     .foregroundColor(Constants.orangePrimary)
                             }
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, 8)
+                        .padding(.horizontal, Constants.spacingTight)
+                        .padding(.bottom, Constants.spacingTight)
                     }
                     .background(isInitial ? Constants.orangePrimaryLight : Constants.surfaceWhite)
                     .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
@@ -194,10 +194,10 @@ struct MascotDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Transitions")
-                    .font(Constants.heading(size: 14, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
                 Text("\(config.edges.count)")
-                    .font(Constants.body(size: 12, weight: .medium))
+                    .font(Constants.fontCallout)
                     .foregroundColor(Constants.textMuted)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
@@ -258,7 +258,7 @@ private struct EdgeRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 4) {
                     Text(nodeName(edge.source))
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                         .foregroundColor(Constants.textPrimary)
 
                     Image(systemName: "arrow.right")
@@ -266,12 +266,12 @@ private struct EdgeRow: View {
                         .foregroundColor(Constants.textMuted)
 
                     Text(nodeName(edge.target))
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                         .foregroundColor(Constants.textPrimary)
 
                     if edge.isLoop {
                         Text("loop")
-                            .font(Constants.body(size: 10, weight: .medium))
+                            .font(Constants.fontFootnote)
                             .foregroundColor(Constants.orangePrimary)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
@@ -284,7 +284,7 @@ private struct EdgeRow: View {
                     triggerBadge
 
                     Text(String(format: "%.1fs", edge.duration))
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                 }
             }
@@ -294,14 +294,14 @@ private struct EdgeRow: View {
             if !edge.isLoop {
                 Button(action: onEdit) {
                     Text("Edit")
-                        .font(Constants.body(size: 12, weight: .medium))
+                        .font(Constants.fontCallout)
                         .foregroundColor(Constants.orangePrimary)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, Constants.spacingNormal)
+        .padding(.vertical, Constants.spacingNormal)
     }
 
     @ViewBuilder
@@ -310,7 +310,7 @@ private struct EdgeRow: View {
         Text(label)
             .font(.system(size: 11, design: .monospaced))
             .foregroundColor(conditionColor)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Constants.spacingTight)
             .padding(.vertical, 3)
             .background(conditionColor.opacity(0.08), in: Capsule())
     }
@@ -397,20 +397,20 @@ private struct ConditionEditorRow: View {
             // Edge label
             HStack(spacing: 4) {
                 Text(nodeName(edge.source))
-                    .font(Constants.heading(size: 13, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
                 Image(systemName: "arrow.right")
                     .font(.system(size: 9, weight: .bold))
                     .foregroundColor(Constants.textMuted)
                 Text(nodeName(edge.target))
-                    .font(Constants.heading(size: 13, weight: .semibold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
             }
 
             // Presets
             VStack(alignment: .leading, spacing: 4) {
                 Text("Presets")
-                    .font(Constants.body(size: 11, weight: .medium))
+                    .font(Constants.fontSubheadline)
                     .foregroundColor(Constants.textMuted)
                 HStack(spacing: 6) {
                     ForEach(Self.presets, id: \.label) { preset in
@@ -418,11 +418,11 @@ private struct ConditionEditorRow: View {
                             onSave(preset.conditions)
                         } label: {
                             Text(preset.label)
-                                .font(Constants.body(size: 11, weight: .medium))
-                                .padding(.horizontal, 8)
+                                .font(Constants.fontSubheadline)
+                                .padding(.horizontal, Constants.spacingTight)
                                 .padding(.vertical, 4)
                                 .background(Constants.orangePrimaryLight.opacity(0.5))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                         }
                         .buttonStyle(.plain)
                     }
@@ -433,7 +433,7 @@ private struct ConditionEditorRow: View {
             HStack(spacing: 8) {
                 Button(action: onCancel) {
                     Text("Cancel")
-                        .font(Constants.body(size: 12, weight: .medium))
+                        .font(Constants.fontCallout)
                         .foregroundColor(Constants.textMuted)
                 }
                 .buttonStyle(.plain)

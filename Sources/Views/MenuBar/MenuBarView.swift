@@ -16,7 +16,7 @@ struct MenuBarView: View {
                         .frame(width: 24, height: 24)
                 }
                 Text("Masko Code")
-                    .font(Constants.heading(size: 14, weight: .bold))
+                    .font(Constants.fontHeadline)
                     .foregroundColor(Constants.textPrimary)
                 Spacer()
                 Button(action: { AppDelegate.showDashboard() }) {
@@ -35,19 +35,19 @@ struct MenuBarView: View {
                     .fill(appStore.isAssistantEventIngestionActive ? Color.green : Color.red)
                     .frame(width: 8, height: 8)
                 Text(appStore.assistantEventIngestionStatusText)
-                    .font(Constants.body(size: 12))
+                    .font(Constants.fontCallout)
                     .foregroundColor(Constants.textMuted)
                 Spacer()
             }
             .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.vertical, Constants.spacingTight)
 
             Divider().overlay(Constants.border)
 
             // Recent notifications
             if appStore.notificationStore.recent.isEmpty {
                 Text("No recent notifications")
-                    .font(Constants.body(size: 12))
+                    .font(Constants.fontCallout)
                     .foregroundColor(Constants.textMuted)
                     .padding()
             } else {
@@ -64,7 +64,7 @@ struct MenuBarView: View {
             if !appStore.sessionStore.activeSessions.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Active Sessions")
-                        .font(Constants.heading(size: 11, weight: .medium))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                     ForEach(appStore.sessionStore.activeSessions) { session in
                         Button {
@@ -75,7 +75,7 @@ struct MenuBarView: View {
                                     .font(.caption)
                                     .foregroundColor(Constants.orangePrimary)
                                 Text(session.projectName ?? "Unknown")
-                                    .font(Constants.body(size: 12))
+                                    .font(Constants.fontCallout)
                                     .foregroundColor(Constants.textPrimary)
                                 Spacer()
                                 Image(systemName: "arrow.up.forward")
@@ -90,7 +90,7 @@ struct MenuBarView: View {
                     }
                 }
                 .padding(.horizontal)
-                .padding(.vertical, 8)
+                .padding(.vertical, Constants.spacingTight)
 
                 Divider().overlay(Constants.border)
             }
@@ -101,7 +101,7 @@ struct MenuBarView: View {
                     .font(.system(size: 12))
                     .foregroundColor(Constants.textMuted)
                 Text("Mascot Overlay")
-                    .font(Constants.body(size: 12))
+                    .font(Constants.fontCallout)
                     .foregroundColor(Constants.textPrimary)
                 Spacer()
                 Button(action: {
@@ -113,7 +113,7 @@ struct MenuBarView: View {
                     }
                 }) {
                     Text(overlayManager.isOverlayEnabled ? "Disable" : "Enable")
-                        .font(Constants.heading(size: 11, weight: .semibold))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(overlayManager.isOverlayEnabled ? Constants.textMuted : .white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 3)
@@ -123,7 +123,7 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.vertical, Constants.spacingTight)
 
             Divider().overlay(Constants.border)
 
@@ -133,14 +133,14 @@ struct MenuBarView: View {
             }) {
                 HStack {
                     Text("Open Masko Dashboard")
-                        .font(Constants.body(size: 13))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textPrimary)
                     Spacer()
                 }
             }
             .buttonStyle(.plain)
             .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.vertical, Constants.spacingTight)
 
             Button(action: {
                 AppDelegate.showDashboard()
@@ -167,7 +167,7 @@ struct MenuBarView: View {
                 Button(action: { appUpdater.checkForUpdates() }) {
                     HStack {
                         Text("Check for Updates...")
-                            .font(Constants.body(size: 13))
+                            .font(Constants.fontBody)
                             .foregroundColor(Constants.textPrimary)
                         Spacer()
                     }
@@ -175,7 +175,7 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
                 .disabled(!appUpdater.canCheckForUpdates)
                 .padding(.horizontal)
-                .padding(.vertical, 6)
+                .padding(.vertical, Constants.spacingTight)
             }
 
             Button(action: {
@@ -183,14 +183,14 @@ struct MenuBarView: View {
             }) {
                 HStack {
                     Text("Quit")
-                        .font(Constants.body(size: 13))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                     Spacer()
                 }
             }
             .buttonStyle(.plain)
             .padding(.horizontal)
-            .padding(.vertical, 6)
+            .padding(.vertical, Constants.spacingTight)
         }
         .frame(width: 320)
         .background(Constants.surfaceWhite)

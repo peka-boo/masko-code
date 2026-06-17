@@ -43,17 +43,17 @@ struct PermissionContentView: View {
     private var isExpanded: Bool { mode == .expanded }
 
     // Sizing
-    private var headerFont: CGFloat { isExpanded ? 15 : 11 }
-    private var bodyFont: CGFloat { isExpanded ? 14 : 11 }
+    private var headerFont: Font { isExpanded ? Constants.fontTitle : Constants.fontSubheadline }
+    private var bodyFont: Font { isExpanded ? Constants.fontBody : Constants.fontSubheadline }
     private var codeFont: CGFloat { isExpanded ? 13 : 10 }
     private var iconFont: CGFloat { isExpanded ? 14 : 11 }
-    private var buttonFont: CGFloat { isExpanded ? 13 : 11 }
-    private var optionFont: CGFloat { isExpanded ? 13 : 11 }
+    private var buttonFont: Font { isExpanded ? Constants.fontHeadline : Constants.fontSubheadline }
+    private var optionFont: Font { isExpanded ? Constants.fontBody : Constants.fontSubheadline }
     private var hintFont: CGFloat { 8 }
-    private var outerPadding: CGFloat { isExpanded ? 24 : 8 }
-    private var innerSpacing: CGFloat { isExpanded ? 12 : 5 }
-    private var buttonPaddingH: CGFloat { isExpanded ? 20 : 12 }
-    private var buttonPaddingV: CGFloat { isExpanded ? 8 : 4 }
+    private var outerPadding: CGFloat { isExpanded ? Constants.contentPaddingH : 8 }
+    private var innerSpacing: CGFloat { isExpanded ? Constants.spacingNormal : 5 }
+    private var buttonPaddingH: CGFloat { isExpanded ? 20 : Constants.spacingNormal }
+    private var buttonPaddingV: CGFloat { isExpanded ? Constants.spacingTight : 4 }
     private var contentMaxHeight: CGFloat? { isExpanded ? nil : (isPlan ? 160 : 300) }
 
     var body: some View {
@@ -63,6 +63,27 @@ struct PermissionContentView: View {
             } else {
                 compactLayout
             }
+        }
+        .onChange(of: state.autoAllowEnabled) { _, newValue in
+            // Synced from another prompt's global toggle — start countdown if needed
+            if newValue && !isPlan && !isQuestion && !state.isCountdownActive {
+                startAutoAllowTimer()
+            }
+        }
+        .onAppear {
+            // Auto-start: check global auto-allow first, then session-scoped
+            if !isPlan && !isQuestion && !state.isCountdownActive {
+                if store.globalAutoAllow {
+                    state.autoAllowEnabled = true
+                    startAutoAllowTimer()
+                } else if let sessionId = permission.event.sessionId,
+                          store.isSessionAutoAllow(sessionId) {
+                    startAutoAllowTimer()
+                }
+            }
+        }
+        .onDisappear {
+            cancelAutoAllowTimer()
         }
         .onChange(of: hotkeyManager.selectedButtonIndex) { _, newIdx in
             guard showShortcuts || isExpanded, let idx = newIdx else { return }
@@ -89,8 +110,8 @@ struct PermissionContentView: View {
         VStack(spacing: 0) {
             headerSection
                 .padding(.horizontal, outerPadding)
-                .padding(.vertical, 16)
-                .background(Color.white)
+                .padding(.vertical, Constants.contentPaddingV)
+                .background(Constants.surfaceWhite)
 
             Divider()
 
@@ -104,12 +125,12 @@ struct PermissionContentView: View {
 
             actionsSection
                 .padding(.horizontal, outerPadding)
-                .padding(.vertical, 16)
-                .background(Color.white)
+                .padding(.vertical, Constants.contentPaddingV)
+                .background(Constants.surfaceWhite)
         }
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 8)
+        .background(Constants.surfaceWhite)
+        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
     }
 
     // MARK: - Header
@@ -122,7 +143,7 @@ struct PermissionContentView: View {
                     .font(.system(size: iconFont))
                     .foregroundStyle(OverlayStyle.orange)
                 Text(titleText)
-                    .font(Constants.heading(size: headerFont, weight: .bold))
+                    .font(isExpanded ? Constants.fontTitle : Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.textPrimary)
             }
 
@@ -203,8 +224,8 @@ struct PermissionContentView: View {
             if isExpanded {
                 Markdown(content)
                     .markdownTextStyle {
-                        FontSize(bodyFont)
-                        ForegroundColor(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.85))
+                        FontSize(isExpanded ? 13 : 11)
+                        ForegroundColor(Constants.textPrimary.opacity(0.85))
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if state.isContentExpanded {
@@ -212,15 +233,15 @@ struct PermissionContentView: View {
                     Markdown(content)
                         .markdownTextStyle {
                             FontSize(codeFont)
-                            ForegroundColor(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.85))
+                            ForegroundColor(Constants.textPrimary.opacity(0.85))
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(maxHeight: 120)
                 .padding(5)
                 .background(OverlayStyle.codeBg)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                 .contentShape(Rectangle())
                 .onTapGesture { state.isContentExpanded = false }
 
@@ -235,14 +256,14 @@ struct PermissionContentView: View {
                 Markdown(preview)
                     .markdownTextStyle {
                         FontSize(codeFont)
-                        ForegroundColor(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.75))
+                        ForegroundColor(Constants.textPrimary.opacity(0.75))
                     }
                     .lineLimit(4)
                     .padding(5)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(OverlayStyle.codeBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                     .contentShape(Rectangle())
                     .onTapGesture { state.isContentExpanded = true }
 
@@ -275,7 +296,7 @@ struct PermissionContentView: View {
         VStack(alignment: .leading, spacing: isExpanded ? 8 : 3) {
             if let header = question.header {
                 Text(header)
-                    .font(Constants.heading(size: isExpanded ? 11 : 10, weight: .bold))
+                    .font(isExpanded ? Constants.fontSubheadline : Constants.fontFootnote)
                     .foregroundStyle(OverlayStyle.orange)
                     .padding(.horizontal, isExpanded ? 8 : 5)
                     .padding(.vertical, isExpanded ? 2 : 1)
@@ -283,7 +304,7 @@ struct PermissionContentView: View {
             }
 
             markdownText(question.question)
-                .font(Constants.body(size: bodyFont, weight: .medium))
+                .font(isExpanded ? Constants.fontBody : Constants.fontSubheadline)
                 .foregroundStyle(OverlayStyle.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentShape(Rectangle())
@@ -334,13 +355,13 @@ struct PermissionContentView: View {
 
                 VStack(alignment: .leading, spacing: isExpanded ? 2 : 1) {
                     markdownText(option.label)
-                        .font(Constants.body(size: optionFont, weight: .medium))
+                        .font(isExpanded ? Constants.fontBody : Constants.fontSubheadline)
                         .foregroundStyle(OverlayStyle.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let desc = option.description, !desc.isEmpty {
                         markdownText(desc)
-                            .font(Constants.body(size: isExpanded ? 11 : 9))
+                            .font(isExpanded ? Constants.fontSubheadline : .system(size: 9))
                             .foregroundStyle(OverlayStyle.textMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -385,7 +406,7 @@ struct PermissionContentView: View {
                         .frame(width: isExpanded ? 16 : 13)
 
                     Text("Other")
-                        .font(Constants.body(size: optionFont, weight: .medium))
+                        .font(isExpanded ? Constants.fontBody : Constants.fontSubheadline)
                         .foregroundStyle(OverlayStyle.textMuted)
 
                     Spacer(minLength: 0)
@@ -413,7 +434,7 @@ struct PermissionContentView: View {
                 ))
                 .focused($otherFieldFocused, equals: question.question)
                 .textFieldStyle(.plain)
-                .font(.system(size: optionFont))
+                .font(isExpanded ? Constants.fontBody : Constants.fontSubheadline)
                 .foregroundStyle(OverlayStyle.textPrimary)
                 .padding(isExpanded ? 8 : 3)
                 .background(OverlayStyle.inputBg)
@@ -445,8 +466,8 @@ struct PermissionContentView: View {
             .frame(maxHeight: 150)
             .padding(5)
             .background(OverlayStyle.codeBg)
-            .clipShape(RoundedRectangle(cornerRadius: 7))
-            .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+            .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
             .contentShape(Rectangle())
             .onTapGesture { state.isContentExpanded = false }
 
@@ -461,8 +482,8 @@ struct PermissionContentView: View {
                 .padding(5)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(OverlayStyle.codeBg)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
-                .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.codeBorder, lineWidth: 1))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.codeBorder, lineWidth: 1))
                 .contentShape(Rectangle())
                 .onTapGesture { state.isContentExpanded = true }
         }
@@ -486,7 +507,7 @@ struct PermissionContentView: View {
     private var terminalFallbackActionsView: some View {
         HStack(spacing: isExpanded ? 10 : 8) {
             Text("Reply in terminal")
-                .font(Constants.body(size: isExpanded ? 12 : 10, weight: .medium))
+                .font(isExpanded ? Constants.fontBody : Constants.fontCallout)
                 .foregroundStyle(OverlayStyle.textMuted)
 
             terminalFallbackButton
@@ -507,7 +528,7 @@ struct PermissionContentView: View {
             HStack(spacing: 5) {
                 Image(systemName: "terminal.fill")
                 Text("Open Terminal")
-                    .font(Constants.heading(size: buttonFont, weight: .semibold))
+                    .font(isExpanded ? Constants.fontHeadline : Constants.fontSubheadline)
             }
             .foregroundStyle(.white)
             .padding(.vertical, buttonPaddingV)
@@ -559,8 +580,8 @@ struct PermissionContentView: View {
                     .padding(10)
                     .frame(minHeight: 60, maxHeight: 120)
                     .background(OverlayStyle.textPrimary.opacity(0.03))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(OverlayStyle.orange.opacity(0.2), lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.orange.opacity(0.2), lineWidth: 1))
                     .overlay(alignment: .topLeading) {
                         if state.feedbackText.isEmpty {
                             Text("Tell Claude what to change...")
@@ -582,7 +603,7 @@ struct PermissionContentView: View {
                     .foregroundStyle(OverlayStyle.textPrimary)
                     .padding(3)
                     .background(OverlayStyle.inputBg)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     .padding(.leading, 22)
                 }
             }
@@ -625,7 +646,7 @@ struct PermissionContentView: View {
                     .padding(.top, isExpanded ? 2 : 0)
 
                 Text(label)
-                    .font(Constants.body(size: optionFont, weight: .medium))
+                    .font(isExpanded ? Constants.fontBody : Constants.fontSubheadline)
                     .foregroundStyle(OverlayStyle.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -669,6 +690,76 @@ struct PermissionContentView: View {
 
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
+            // Auto-allow row (global, 5s countdown)
+            // Auto-allow toggles row: global left, session right
+            HStack {
+                // Left: global auto-allow
+                Toggle(isOn: Binding(
+                    get: { state.autoAllowEnabled },
+                    set: { newValue in
+                        state.autoAllowEnabled = newValue
+                        store.setGlobalAutoAllow(newValue)
+                        if newValue {
+                            startAutoAllowTimer()
+                        } else {
+                            cancelAutoAllowTimer()
+                        }
+                    }
+                )) {
+                    Text("Auto-allow")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Right: session auto-allow
+                if let sessionId = permission.event.sessionId {
+                    Toggle(isOn: Binding(
+                        get: { store.isSessionAutoAllow(sessionId) },
+                        set: { newValue in
+                            store.setSessionAutoAllow(sessionId, enabled: newValue)
+                            if newValue {
+                                if !state.isCountdownActive {
+                                    startAutoAllowTimer()
+                                }
+                            } else {
+                                cancelAutoAllowTimer()
+                            }
+                        }
+                    )) {
+                        Text("This session")
+                            .font(Constants.fontFootnote)
+                            .foregroundStyle(OverlayStyle.textMuted)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Countdown progress bar
+            if state.isCountdownActive {
+                HStack {
+                    Text("\(Int(ceil(state.autoAllowRemainingSeconds)))s")
+                        .font(Constants.fontFootnote)
+                        .foregroundStyle(OverlayStyle.textMuted)
+                        .monospacedDigit()
+
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.textPrimary.opacity(0.1))
+                                .frame(height: 3)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(OverlayStyle.orange)
+                                .frame(width: geometry.size.width * (state.autoAllowRemainingSeconds / 5.0), height: 3)
+                        }
+                    }
+                    .frame(height: 3)
+                }
+            }
+
             approveAndDenyButtons(
                 approveLabel: "Allow",
                 denyLabel: "Deny",
@@ -686,7 +777,7 @@ struct PermissionContentView: View {
                     HStack(spacing: 4) {
                         Spacer(minLength: 0)
                         Text(suggestion.displayLabel)
-                            .font(Constants.body(size: isExpanded ? 12 : 10, weight: .medium))
+                            .font(isExpanded ? Constants.fontBody : Constants.fontCallout)
                             .foregroundStyle(OverlayStyle.denyText)
                         if showBadge {
                             ShortcutBadge(index: sugIndex, isSelected: hotkeyManager.selectedButtonIndex == sugIndex)
@@ -733,28 +824,28 @@ struct PermissionContentView: View {
                 Button(action: onDeny) {
                     HStack(spacing: 5) {
                         Text(denyLabel)
-                            .font(Constants.heading(size: buttonFont, weight: .semibold))
+                            .font(isExpanded ? Constants.fontHeadline : Constants.fontSubheadline)
                         if hotkeyManager.isCmdHeld { ActionBadge(label: "⌘⎋") }
                     }
                     .foregroundStyle(OverlayStyle.denyText)
                     .padding(.vertical, buttonPaddingV)
                     .padding(.horizontal, buttonPaddingH)
                     .contentShape(Rectangle())
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
 
                 Button(action: onApprove) {
                     HStack(spacing: 5) {
                         Text(approveLabel)
-                            .font(Constants.heading(size: buttonFont, weight: .semibold))
+                            .font(isExpanded ? Constants.fontHeadline : Constants.fontSubheadline)
                         if hotkeyManager.isCmdHeld { ActionBadge(label: "⌘↵") }
                     }
                     .foregroundStyle(.white)
                     .padding(.vertical, buttonPaddingV)
                     .padding(.horizontal, buttonPaddingH)
-                    .background(approveDisabled ? Color.gray.opacity(0.3) : OverlayStyle.orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(approveDisabled ? Constants.border : OverlayStyle.orange)
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
                 .disabled(approveDisabled)
@@ -766,14 +857,14 @@ struct PermissionContentView: View {
                     HStack(spacing: 4) {
                         Spacer(minLength: 0)
                         Text(approveLabel)
-                            .font(Constants.heading(size: buttonFont, weight: .semibold))
+                            .font(isExpanded ? Constants.fontHeadline : Constants.fontSubheadline)
                             .foregroundStyle(.white)
                         if showShortcuts { ActionBadge(label: "⌘↩") }
                         Spacer(minLength: 0)
                     }
                     .padding(.vertical, buttonPaddingV)
-                    .background(approveDisabled ? Color.gray.opacity(0.3) : OverlayStyle.orange)
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .background(approveDisabled ? Constants.border : OverlayStyle.orange)
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 }
                 .buttonStyle(.plain)
                 .disabled(approveDisabled)
@@ -782,15 +873,15 @@ struct PermissionContentView: View {
                     HStack(spacing: 4) {
                         Spacer(minLength: 0)
                         Text(denyLabel)
-                            .font(Constants.heading(size: buttonFont, weight: .semibold))
+                            .font(isExpanded ? Constants.fontHeadline : Constants.fontSubheadline)
                             .foregroundStyle(OverlayStyle.denyText)
                         if showShortcuts { ActionBadge(label: "⌘⎋") }
                         Spacer(minLength: 0)
                     }
                     .padding(.vertical, buttonPaddingV)
                     .contentShape(Rectangle())
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(OverlayStyle.denyBorder, lineWidth: 1))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                    .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall).stroke(OverlayStyle.denyBorder, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -890,5 +981,37 @@ struct PermissionContentView: View {
         guard let sessionId = permission.event.sessionId,
               let session = sessionStore.sessions.first(where: { $0.id == sessionId }) else { return nil }
         return session.projectName
+    }
+
+    // MARK: - Auto-Allow Timer
+
+    private func startAutoAllowTimer() {
+        state.isCountdownActive = true
+        state.autoAllowStartDate = Date()
+        state.autoAllowRemainingSeconds = 5.0
+        state.autoAllowTimer?.invalidate()
+        state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            Task { @MainActor in
+                guard state.isCountdownActive else { return }
+                if let startDate = state.autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    state.autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
+                        cancelAutoAllowTimer()
+                        onDecision(.allow)
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelAutoAllowTimer() {
+        state.autoAllowTimer?.invalidate()
+        state.autoAllowTimer = nil
+        state.autoAllowStartDate = nil
+        state.isCountdownActive = false
+        state.autoAllowRemainingSeconds = 5.0
     }
 }

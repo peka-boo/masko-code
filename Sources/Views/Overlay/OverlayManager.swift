@@ -73,6 +73,7 @@ final class OverlayManager {
 
     // Coalescing flag for HUD repositioning — prevents recursive layout cycles
     private var hudRepositionScheduled = false
+    private var isMovingScreen = false // Prevent recursive moveToActiveScreen() calls
 
     // Stores passed from AppStore for overlay display
     // Non-optional with defaults — avoids @Environment crash when overlay renders before stores are set
@@ -982,6 +983,11 @@ final class OverlayManager {
         newPanel.contentView = controller.view
         newPanel.contentViewController = controller
 
+        // Style as native macOS dark panel
+        newPanel.hasShadow = true
+        newPanel.backgroundColor = NSColor(Constants.surfaceWhite)
+        newPanel.isOpaque = true
+
         // Hide the bubble panels to avoid overlap (keep mascot visible)
         statsPanel?.orderOut(nil)
         permissionPanel?.orderOut(nil)
@@ -1095,9 +1101,10 @@ final class OverlayManager {
         }
     }
 
-    /// Re-apply window level and bring to front without stealing focus.
+    /// Re-apply window level, move to active screen, and bring to front without stealing focus.
     private func reassertPanel() {
         guard let panel else { return }
+        moveToActiveScreen()
         panel.level = .screenSaver
         panel.orderFrontRegardless()
         if let statsPanel {
@@ -1108,6 +1115,47 @@ final class OverlayManager {
             permissionPanel.level = .screenSaver
             permissionPanel.orderFrontRegardless()
         }
+    }
+
+    /// Move all overlay panels to the screen with keyboard focus (NSScreen.main).
+    /// Preserves the relative position (same percentage from edges) so the overlay
+    /// appears in the equivalent spot on whichever screen the user is working on.
+    @MainActor
+    private func moveToActiveScreen() {
+        guard let panel, !isMovingScreen else { return }
+        isMovingScreen = true
+        defer { isMovingScreen = false }
+
+        // Skip if expanded panel is showing - it shouldn't move it during reassert
+        if expandedPanel != nil { return }
+
+        let currentScreenFrame = panel.screen?.visibleFrame ?? .zero
+        let activeScreenFrame = NSScreen.main?.visibleFrame ?? .zero
+        guard activeScreenFrame.width > 0, activeScreenFrame.height > 0 else { return }
+
+        // Already on the active screen — no move needed
+        if panel.screen == NSScreen.main { return }
+
+        // Compute relative position on current screen (0...1 range)
+        let relX = currentScreenFrame.width > 0
+            ? (panel.frame.origin.x - currentScreenFrame.minX) / currentScreenFrame.width
+            : 0.8
+        let relY = currentScreenFrame.height > 0
+            ? (panel.frame.origin.y - currentScreenFrame.minY) / currentScreenFrame.height
+            : 0.1
+
+        // Map to same relative position on active screen
+        let side = CGFloat(currentSizePixels)
+        let newX = activeScreenFrame.minX + relX * (activeScreenFrame.width - side)
+        let newY = activeScreenFrame.minY + relY * (activeScreenFrame.height - side)
+        let clamped = Self.clampedMascotRect(
+            origin: CGPoint(x: newX, y: newY),
+            side: side,
+            screenFrame: activeScreenFrame
+        )
+        panel.setFrame(clamped, display: true, animate: false)
+        savePosition()
+        scheduleHUDReposition()
     }
 
     private func resizePanelToPixels(_ pixels: Int) {
@@ -1202,7 +1250,7 @@ final class OverlayManager {
         }
 
         let mascotFrame = panel.frame
-        let screen = panel.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
+        let screen = panel.screen?.visibleFrame ?? statsPanel?.screen?.visibleFrame ?? NSScreen.main?.visibleFrame ?? .zero
         let gap: CGFloat = 4
         let statsTop = statsPanel?.frame.maxY ?? mascotFrame.maxY
 
@@ -1286,8 +1334,14 @@ final class OverlayManager {
 
     private func savePosition() {
         guard let panel else { return }
-        UserDefaults.standard.set(panel.frame.origin.x, forKey: "overlay_x")
-        UserDefaults.standard.set(panel.frame.origin.y, forKey: "overlay_y")
+        let frame = panel.frame
+        UserDefaults.standard.set(frame.origin.x, forKey: "overlay_x")
+        UserDefaults.standard.set(frame.origin.y, forKey: "overlay_y")
+        // Save screen identifier for multi-monitor support
+        if let screen = panel.screen {
+            UserDefaults.standard.set(screen.frame.origin.x, forKey: "overlay_screen_x")
+            UserDefaults.standard.set(screen.frame.origin.y, forKey: "overlay_screen_y")
+        }
     }
 
     private func setupObservers(for targetPanel: OverlayPanel) {
@@ -1297,7 +1351,7 @@ final class OverlayManager {
             object: targetPanel,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.savePosition() }
+            self?.savePosition()
         }
         workspaceObservers.append(moveObserver)
 
@@ -1320,6 +1374,36 @@ final class OverlayManager {
             Task { @MainActor in self?.reassertPanel() }
         }
         workspaceObservers.append(appObserver)
+
+        // Handle screen configuration changes (disconnected/added monitors)
+        let screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleScreenChange()
+            }
+        }
+        workspaceObservers.append(screenObserver)
+    }
+
+    private func handleScreenChange() {
+        guard let panel else { return }
+        let currentScreen = panel.screen ?? NSScreen.main
+        guard let screen = currentScreen?.visibleFrame else { return }
+        // If panel is off-screen after monitor change, reposition it
+        if !screen.intersects(panel.frame) {
+            let repaired = Self.clampedMascotRect(
+                origin: panel.frame.origin,
+                side: CGFloat(currentSizePixels),
+                screenFrame: screen
+            )
+            panel.setFrame(repaired, display: true, animate: true)
+            savePosition()
+            scheduleHUDReposition()
+            print("[masko-desktop] Repositioned overlay after screen change")
+        }
     }
 
     private func repairMascotPanelIfNeeded(_ mascotPanel: OverlayPanel) {
@@ -1342,13 +1426,27 @@ final class OverlayManager {
 
     static func startingMascotRect(savedX: Double, savedY: Double, sidePixels: Int, screenFrame: NSRect) -> NSRect {
         let side = max(CGFloat(sidePixels), minMascotSide)
+
+        // Try to find the original screen by saved position for multi-monitor support
+        var targetScreen = screenFrame
+        let savedScreenX = UserDefaults.standard.double(forKey: "overlay_screen_x")
+        let savedScreenY = UserDefaults.standard.double(forKey: "overlay_screen_y")
+        if savedScreenX != 0 || savedScreenY != 0 {
+            for screen in NSScreen.screens {
+                if abs(screen.frame.origin.x - savedScreenX) < 1 && abs(screen.frame.origin.y - savedScreenY) < 1 {
+                    targetScreen = screen.visibleFrame
+                    break
+                }
+            }
+        }
+
         let hasSavedOrigin = savedX > 0 || savedY > 0
         let fallbackOrigin = CGPoint(
-            x: screenFrame.maxX - side - defaultInset,
-            y: screenFrame.minY + defaultInset
+            x: targetScreen.maxX - side - defaultInset,
+            y: targetScreen.minY + defaultInset
         )
         let origin = hasSavedOrigin ? CGPoint(x: savedX, y: savedY) : fallbackOrigin
-        return clampedMascotRect(origin: origin, side: side, screenFrame: screenFrame)
+        return clampedMascotRect(origin: origin, side: side, screenFrame: targetScreen)
     }
 
     static func clampedMascotRect(origin: CGPoint, side: CGFloat, screenFrame: NSRect) -> NSRect {

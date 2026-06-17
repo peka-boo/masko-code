@@ -25,6 +25,13 @@ final class PermissionInteractionState {
     // Standard permission
     var isContentExpanded: Bool = false
 
+    // Auto-allow
+    var autoAllowEnabled: Bool = false  // global checkbox state
+    var isCountdownActive: Bool = false // whether countdown bar is running
+    var autoAllowRemainingSeconds: Double = 5.0
+    var autoAllowTimer: Timer?
+    var autoAllowStartDate: Date?
+
     /// Build answers dict from current question state.
     func buildAnswers(for questions: [ParsedQuestion]) -> [String: String] {
         var answers: [String: String] = [:]
@@ -51,5 +58,9 @@ final class PermissionInteractionState {
             }
             return selections[q.question] != nil
         }
+    }
+
+    deinit {
+        autoAllowTimer?.invalidate()
     }
 }

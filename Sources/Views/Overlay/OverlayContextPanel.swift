@@ -176,7 +176,7 @@ struct OverlayContextMenuContent: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Constants.textMuted)
                 Text(title)
-                    .font(Constants.heading(size: 13, weight: .medium))
+                    .font(Constants.fontHeadline)
                     .foregroundStyle(Constants.textPrimary)
                 Spacer()
             }
@@ -195,7 +195,7 @@ struct OverlayContextMenuContent: View {
                     .foregroundStyle(Constants.textMuted)
                     .frame(width: 16)
                 Text(title)
-                    .font(Constants.heading(size: 13, weight: .medium))
+                    .font(Constants.fontHeadline)
                     .foregroundStyle(Constants.textPrimary)
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -205,7 +205,7 @@ struct OverlayContextMenuContent: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == title ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -220,14 +220,14 @@ struct OverlayContextMenuContent: View {
                     .foregroundStyle(Constants.textMuted)
                     .frame(width: 16)
                 Text(title)
-                    .font(Constants.body(size: 13, weight: .medium))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textPrimary)
                 Spacer()
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == title ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -241,14 +241,14 @@ struct OverlayContextMenuContent: View {
         } label: {
             HStack(spacing: 8) {
                 Text(title)
-                    .font(Constants.body(size: 13, weight: .medium))
+                    .font(Constants.fontBody)
                     .foregroundStyle(Constants.textPrimary)
                 Spacer()
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == "snooze-\(minutes)" ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -259,13 +259,13 @@ struct OverlayContextMenuContent: View {
         HStack(spacing: 6) {
             TextField("Min", text: $customMinutes)
                 .textFieldStyle(.plain)
-                .font(Constants.body(size: 13, weight: .medium))
+                .font(Constants.fontBody)
                 .foregroundStyle(Constants.textPrimary)
                 .frame(width: 50)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .background(Constants.border.opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .onSubmit {
                     if let mins = Int(customMinutes), mins > 0 {
                         onSnooze(mins)
@@ -274,7 +274,7 @@ struct OverlayContextMenuContent: View {
                 }
 
             Text("min")
-                .font(Constants.body(size: 12, weight: .medium))
+                .font(Constants.fontCallout)
                 .foregroundStyle(Constants.textMuted)
 
             Spacer()
@@ -286,12 +286,12 @@ struct OverlayContextMenuContent: View {
                 }
             } label: {
                 Text("Go")
-                    .font(Constants.heading(size: 11, weight: .semibold))
+                    .font(Constants.fontSubheadline)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(Int(customMinutes) ?? 0 > 0 ? Constants.orangePrimary : Color.gray.opacity(0.5))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
             .disabled((Int(customMinutes) ?? 0) <= 0)
@@ -308,7 +308,7 @@ struct OverlayContextMenuContent: View {
         } label: {
             HStack(spacing: 8) {
                 Text(title)
-                    .font(Constants.body(size: 13, weight: isActive ? .semibold : .medium))
+                    .font(isActive ? Font.system(size: 13, weight: .semibold) : Constants.fontBody)
                     .foregroundStyle(isActive ? Constants.orangePrimary : Constants.textPrimary)
                 Spacer()
                 if isActive {
@@ -320,7 +320,7 @@ struct OverlayContextMenuContent: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == "size-\(title)" ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -368,7 +368,7 @@ struct OverlayContextMenuContent: View {
             .frame(height: 22)
 
             Text("\(Int(currentDialogScale * 100))%")
-                .font(Constants.body(size: 11, weight: .medium))
+                .font(Constants.fontSubheadline)
                 .foregroundStyle(Constants.textMuted)
         }
         .padding(.horizontal, 10)
@@ -418,7 +418,7 @@ struct OverlayContextMenuContent: View {
             .frame(height: 22)
 
             Text("\(Int(currentOpacity * 100))%")
-                .font(Constants.body(size: 11, weight: .medium))
+                .font(Constants.fontSubheadline)
                 .foregroundStyle(Constants.textMuted)
         }
         .padding(.horizontal, 10)
@@ -437,10 +437,10 @@ struct OverlayContextMenuContent: View {
                     .frame(width: 16)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Disable Mascot")
-                        .font(Constants.heading(size: 13, weight: .medium))
+                        .font(Constants.fontHeadline)
                         .foregroundStyle(Constants.textPrimary)
                     Text("Notifications will continue")
-                        .font(Constants.body(size: 10))
+                        .font(Constants.fontCallout)
                         .foregroundStyle(Constants.textMuted)
                 }
                 Spacer()
@@ -448,7 +448,7 @@ struct OverlayContextMenuContent: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == "disable" ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -466,14 +466,14 @@ struct OverlayContextMenuContent: View {
                     .foregroundStyle(Constants.textMuted)
                     .frame(width: 16)
                 Text("Open Dashboard")
-                    .font(Constants.heading(size: 13, weight: .medium))
+                    .font(Constants.fontHeadline)
                     .foregroundStyle(Constants.textPrimary)
                 Spacer()
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == "dashboard" ? Constants.orangePrimarySubtle : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -491,14 +491,14 @@ struct OverlayContextMenuContent: View {
                     .foregroundStyle(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
                     .frame(width: 16)
                 Text("Close")
-                    .font(Constants.heading(size: 13, weight: .medium))
+                    .font(Constants.fontHeadline)
                     .foregroundStyle(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
                 Spacer()
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(hoveredItem == "close" ? Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255).opacity(0.08) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -544,14 +544,14 @@ struct StandaloneContextMenuContent: View {
                         .foregroundStyle(Constants.textMuted)
                         .frame(width: 16)
                     Text("Open Dashboard")
-                        .font(Constants.heading(size: 13, weight: .medium))
+                        .font(Constants.fontHeadline)
                         .foregroundStyle(Constants.textPrimary)
                     Spacer()
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(hoveredItem == "dashboard" ? Constants.orangePrimarySubtle : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -568,14 +568,14 @@ struct StandaloneContextMenuContent: View {
                         .foregroundStyle(Constants.orangePrimary)
                         .frame(width: 16)
                     Text("Enable Mascot")
-                        .font(Constants.heading(size: 13, weight: .medium))
+                        .font(Constants.fontHeadline)
                         .foregroundStyle(Constants.textPrimary)
                     Spacer()
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(hoveredItem == "enable" ? Constants.orangePrimarySubtle : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -592,14 +592,14 @@ struct StandaloneContextMenuContent: View {
                         .foregroundStyle(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
                         .frame(width: 16)
                     Text("Close")
-                        .font(Constants.heading(size: 13, weight: .medium))
+                        .font(Constants.fontHeadline)
                         .foregroundStyle(Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255))
                     Spacer()
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
                 .background(hoveredItem == "close" ? Color(.sRGB, red: 220/255, green: 38/255, blue: 38/255).opacity(0.08) : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)

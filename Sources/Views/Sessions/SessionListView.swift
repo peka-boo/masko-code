@@ -15,10 +15,10 @@ struct SessionListView: View {
                         .font(.system(size: 36))
                         .foregroundColor(Constants.textMuted)
                     Text("No Sessions")
-                        .font(Constants.heading(size: 22, weight: .semibold))
+                        .font(Constants.fontTitle.weight(.semibold))
                         .foregroundColor(Constants.textPrimary)
                     Text("Claude Code and Codex sessions will appear here")
-                        .font(Constants.body(size: 14))
+                        .font(Constants.fontBody)
                         .foregroundColor(Constants.textMuted)
                     Spacer()
                 }
@@ -42,7 +42,7 @@ struct SessionListView: View {
                             }
                         }
                     }
-                    .padding(8)
+                    .padding(Constants.spacingTight)
                 }
                 .background(Constants.lightBackground)
             }
@@ -68,15 +68,15 @@ private struct SessionRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.projectName ?? "Unknown Project")
-                    .font(Constants.heading(size: 14, weight: .semibold))
+                    .font(Constants.fontHeadline.weight(.semibold))
                     .foregroundColor(isSelected ? Constants.orangePrimary : Constants.textPrimary)
                 HStack {
                     Text("\(session.eventCount) events")
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundColor(Constants.textMuted)
                     if let lastEvent = session.lastEventAt {
                         Text("Last: \(relativeTimeString(from: lastEvent))")
-                            .font(Constants.body(size: 11))
+                            .font(Constants.fontSubheadline)
                             .foregroundColor(Constants.textMuted)
                     }
                 }
@@ -98,7 +98,7 @@ private struct SessionRow: View {
             }
 
             Text(session.status.rawValue.capitalized)
-                .font(Constants.body(size: 11, weight: .medium))
+                .font(Constants.fontSubheadline.weight(.medium))
                 .foregroundColor(session.status == .active ? Color.green : Constants.textMuted)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 2)

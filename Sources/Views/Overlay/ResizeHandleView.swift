@@ -70,10 +70,10 @@ final class ResizeHandleNSView: NSView {
         // Draw 3 diagonal grip lines — orange with white outline for visibility on any background
         let inset: CGFloat = 4
         let spacing: CGFloat = 5
-        let orange = NSColor(srgbRed: 249/255, green: 93/255, blue: 2/255, alpha: 1.0)
+        let orange = NSColor(srgbRed: 139/255, green: 92/255, blue: 246/255, alpha: 1.0)
 
         // White outline pass
-        ctx.setStrokeColor(NSColor.white.cgColor)
+        ctx.setStrokeColor(NSColor.white.withAlphaComponent(0.3).cgColor)
         ctx.setLineWidth(4)
         ctx.setLineCap(.round)
         for i in 0..<3 {

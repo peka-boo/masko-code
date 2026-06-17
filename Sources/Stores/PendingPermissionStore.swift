@@ -370,6 +370,12 @@ final class PendingPermissionStore {
     /// Key: "sessionId|agentId|toolName" → toolUseId
     private var preToolUseCache: [String: String] = [:]
 
+    /// Sessions where user enabled "auto-allow for this session" — all future permissions auto-allowed
+    private(set) var sessionAutoAllow: Set<String> = []
+
+    /// Global auto-allow toggle (persists across all permissions until disabled)
+    var globalAutoAllow: Bool = false
+
     init() {
         startLivenessChecks()
     }
@@ -489,6 +495,34 @@ final class PendingPermissionStore {
         for id in staleIds {
             silentRemove(id: id)
         }
+    }
+
+    func setGlobalAutoAllow(_ enabled: Bool) {
+        globalAutoAllow = enabled
+        // Sync all existing pending permissions' auto-allow state
+        for perm in pending {
+            let state = interactionState(for: perm.id)
+            state.autoAllowEnabled = enabled
+            if !enabled {
+                state.isCountdownActive = false
+                state.autoAllowTimer?.invalidate()
+                state.autoAllowTimer = nil
+                state.autoAllowStartDate = nil
+                state.autoAllowRemainingSeconds = 5.0
+            }
+        }
+    }
+
+    func setSessionAutoAllow(_ sessionId: String, enabled: Bool) {
+        if enabled {
+            sessionAutoAllow.insert(sessionId)
+        } else {
+            sessionAutoAllow.remove(sessionId)
+        }
+    }
+
+    func isSessionAutoAllow(_ sessionId: String) -> Bool {
+        sessionAutoAllow.contains(sessionId)
     }
 
     /// Dismiss all pending permissions for a session (user answered from terminal).

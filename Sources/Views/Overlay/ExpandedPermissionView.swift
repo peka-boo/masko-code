@@ -29,6 +29,13 @@ struct ExpandedPermissionView: View {
     @State private var currentQuestionIndex: Int = 0
     @FocusState private var otherFieldFocused: String?
 
+    // Auto-allow state
+    @State private var autoAllowEnabled = false
+    @State private var isCountdownActive = false
+    @State private var autoAllowRemainingSeconds: Double = 5.0
+    @State private var autoAllowTimer: Timer?
+    @State private var autoAllowStartDate: Date?
+
     private var isPlan: Bool { permission.event.toolName == "ExitPlanMode" }
     private var isQuestion: Bool { permission.parsedQuestions != nil && !(permission.parsedQuestions ?? []).isEmpty }
     private var questions: [ParsedQuestion] { permission.parsedQuestions ?? [] }
@@ -75,12 +82,15 @@ struct ExpandedPermissionView: View {
                     standardContent
                 }
             }
-            .background(Color(red: 250/255, green: 249/255, blue: 247/255))
+            .background(Constants.surfaceWhite)
 
             Divider()
 
             // Action bar
             VStack(spacing: 12) {
+                // Auto-allow toggles row: global left, session right
+                autoAllowRow
+
                 if isPlan {
                     planActions
                 } else if isQuestion {
@@ -91,11 +101,30 @@ struct ExpandedPermissionView: View {
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(Constants.surfaceWhite)
         }
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 8)
+        .background(Constants.surfaceWhite)
+        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: Constants.cornerRadius)
+                .stroke(Constants.border, lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.3), radius: 20, x: 0, y: 8)
+        .onAppear {
+            // Auto-start: check global auto-allow first, then session-scoped
+            if !isPlan && !isQuestion && !isCountdownActive {
+                if pendingPermissionStore.globalAutoAllow {
+                    autoAllowEnabled = true
+                    startAutoAllowTimer()
+                } else if let sessionId = permission.event.sessionId,
+                          pendingPermissionStore.isSessionAutoAllow(sessionId) {
+                    startAutoAllowTimer()
+                }
+            }
+        }
+        .onDisappear {
+            cancelAutoAllowTimer()
+        }
     }
 
     // MARK: - Header
@@ -105,19 +134,19 @@ struct ExpandedPermissionView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 14))
-                    .foregroundStyle(Color(red: 249/255, green: 93/255, blue: 2/255))
+                    .foregroundStyle(Constants.orangePrimary)
                 Text(title)
-                    .font(Constants.heading(size: 15, weight: .bold))
-                    .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
+                    .font(Constants.fontTitle)
+                    .foregroundStyle(Constants.textPrimary)
             }
 
             if let project = projectName {
                 Text(project)
                     .font(.system(size: 12))
-                    .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.4))
+                    .foregroundStyle(Constants.textPrimary.opacity(0.4))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .background(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.05))
+                    .background(Constants.textPrimary.opacity(0.05))
                     .clipShape(Capsule())
             }
 
@@ -136,7 +165,7 @@ struct ExpandedPermissionView: View {
                 } label: {
                     Image(systemName: "terminal.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.3))
+                        .foregroundStyle(Constants.textPrimary.opacity(0.3))
                 }
                 .buttonStyle(.plain)
                 .help("Open terminal")
@@ -149,7 +178,7 @@ struct ExpandedPermissionView: View {
                 Button { onLater() } label: {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.3))
+                        .foregroundStyle(Constants.textPrimary.opacity(0.3))
                 }
                 .buttonStyle(.plain)
                 .help("Handle later")
@@ -162,7 +191,7 @@ struct ExpandedPermissionView: View {
                 Button { onClose() } label: {
                     Image(systemName: "arrow.down.right.and.arrow.up.left")
                         .font(.system(size: 11))
-                        .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.3))
+                        .foregroundStyle(Constants.textPrimary.opacity(0.3))
                 }
                 .buttonStyle(.plain)
                 .help("Close expanded view")
@@ -172,7 +201,7 @@ struct ExpandedPermissionView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
-        .background(Color.white)
+        .background(Constants.surfaceWhite)
     }
 
     // MARK: - Content Views
@@ -181,49 +210,52 @@ struct ExpandedPermissionView: View {
         let content = permission.planFileContent ?? "Plan file not found"
         return markdownText(content)
             .font(.system(size: 14))
-            .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.85))
+            .foregroundStyle(Constants.textPrimary.opacity(0.85))
             .lineSpacing(4)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(24)
+            .padding(.horizontal, Constants.contentPaddingH)
+            .padding(.vertical, Constants.contentPaddingV)
     }
 
     private var questionContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: Constants.spacingLoose) {
             ForEach(Array(questions.enumerated()), id: \.offset) { qIdx, question in
                 expandedQuestionView(question, questionIndex: qIdx)
             }
         }
-        .padding(24)
+        .padding(.horizontal, Constants.contentPaddingH)
+        .padding(.vertical, Constants.contentPaddingV)
     }
 
     private var standardContent: some View {
         Text(permission.fullToolInputText)
             .font(.system(size: 13, design: .monospaced))
-            .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.85))
+            .foregroundStyle(Constants.textPrimary.opacity(0.85))
             .lineSpacing(3)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(24)
+            .padding(.horizontal, Constants.contentPaddingH)
+            .padding(.vertical, Constants.contentPaddingV)
     }
 
     // MARK: - Question Views
 
     @ViewBuilder
     private func expandedQuestionView(_ question: ParsedQuestion, questionIndex: Int) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: Constants.spacingTight) {
             if let header = question.header {
                 Text(header)
-                    .font(Constants.heading(size: 11, weight: .bold))
-                    .foregroundStyle(Color(red: 249/255, green: 93/255, blue: 2/255))
+                    .font(Constants.fontSubheadline)
+                    .foregroundStyle(Constants.orangePrimary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 2)
-                    .overlay(Capsule().stroke(Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.25), lineWidth: 1))
+                    .overlay(Capsule().stroke(Constants.orangePrimary.opacity(0.25), lineWidth: 1))
             }
 
             markdownText(question.question)
-                .font(Constants.body(size: 14, weight: .medium))
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
+                .font(Constants.fontBody)
+                .foregroundStyle(Constants.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -264,20 +296,20 @@ struct ExpandedPermissionView: View {
                     : (isSelected ? "checkmark.circle.fill" : "circle"))
                     .font(.system(size: 13))
                     .foregroundStyle(isSelected
-                        ? Color(red: 249/255, green: 93/255, blue: 2/255)
-                        : Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.2))
+                        ? Constants.orangePrimary
+                        : Constants.textPrimary.opacity(0.2))
                     .frame(width: 16)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    markdownText(option.label)
-                        .font(Constants.body(size: 13, weight: .medium))
-                        .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
+                        markdownText(option.label)
+                            .font(Constants.fontBody)
+                        .foregroundStyle(Constants.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
 
                     if let desc = option.description, !desc.isEmpty {
                         markdownText(desc)
-                            .font(Constants.body(size: 11))
-                            .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.55))
+                            .font(Constants.fontSubheadline)
+                            .foregroundStyle(Constants.textPrimary.opacity(0.55))
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -288,13 +320,13 @@ struct ExpandedPermissionView: View {
                     ActionBadge(label: "⌘\(index + 1)")
                 }
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 10)
+            .padding(.vertical, Constants.spacingTight)
+            .padding(.horizontal, Constants.spacingNormal)
             .background(isSelected
-                ? Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.06)
+                ? Constants.orangePrimary.opacity(0.06)
                 : Color.clear)
             .contentShape(Rectangle())
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
         }
         .buttonStyle(.plain)
     }
@@ -311,17 +343,17 @@ struct ExpandedPermissionView: View {
                 selections.removeValue(forKey: question.question)
                 otherFieldFocused = question.question
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: Constants.spacingTight) {
                     Image(systemName: isCustom ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 13))
                         .foregroundStyle(isCustom
-                            ? Color(red: 249/255, green: 93/255, blue: 2/255)
-                            : Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.2))
+                            ? Constants.orangePrimary
+                            : Constants.textPrimary.opacity(0.2))
                         .frame(width: 16)
 
                     Text("Other")
-                        .font(Constants.body(size: 13, weight: .medium))
-                        .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.55))
+                        .font(Constants.fontBody)
+                        .foregroundStyle(Constants.textPrimary.opacity(0.55))
 
                     Spacer(minLength: 0)
 
@@ -329,13 +361,13 @@ struct ExpandedPermissionView: View {
                         ActionBadge(label: "⌘\(otherIndex + 1)")
                     }
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
+                .padding(.vertical, Constants.spacingTight)
+                .padding(.horizontal, Constants.spacingNormal)
                 .background(isCustom
-                    ? Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.06)
+                    ? Constants.orangePrimary.opacity(0.06)
                     : Color.clear)
                 .contentShape(Rectangle())
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
 
@@ -347,10 +379,10 @@ struct ExpandedPermissionView: View {
                 .focused($otherFieldFocused, equals: question.question)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
-                .padding(8)
-                .background(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.04))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .foregroundStyle(Constants.textPrimary)
+                .padding(Constants.spacingTight)
+                .background(Constants.textPrimary.opacity(0.04))
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                 .padding(.leading, 28)
             }
         }
@@ -385,42 +417,46 @@ struct ExpandedPermissionView: View {
         HStack(spacing: 10) {
             Text("⌘P close  ·  ⌘⎋ skip  ·  ⌘↵ submit")
                 .font(.system(size: 8, weight: .medium, design: .rounded))
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.35))
+                .foregroundStyle(Constants.textPrimary.opacity(0.35))
 
             Spacer()
 
             Button {
+                cancelAutoAllowTimer()
                 onDecision(.deny)
                 onClose()
             } label: {
                 HStack(spacing: 5) {
                     Text("Skip")
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                     if showShortcuts { ActionBadge(label: "⌘⎋") }
                 }
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.5))
-                .padding(.vertical, 8)
+                .foregroundStyle(Constants.textPrimary.opacity(0.5))
+                .padding(.vertical, Constants.spacingTight)
                 .padding(.horizontal, 20)
                 .contentShape(Rectangle())
-                .overlay(RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
+                    .stroke(Constants.textPrimary.opacity(0.12), lineWidth: 1))
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: .command)
 
-            Button { submitAnswers() } label: {
+            Button { 
+                cancelAutoAllowTimer()
+                submitAnswers() 
+            } label: {
                 HStack(spacing: 5) {
                     Text("Submit")
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                     if showShortcuts { ActionBadge(label: "⌘↵") }
                 }
                 .foregroundStyle(.white)
-                .padding(.vertical, 8)
+                .padding(.vertical, Constants.spacingTight)
                 .padding(.horizontal, 20)
                 .background(allAnswered
-                    ? Color(red: 249/255, green: 93/255, blue: 2/255)
-                    : Color.gray.opacity(0.3))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                    ? Constants.orangePrimary
+                    : Constants.border)
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)
@@ -443,20 +479,20 @@ struct ExpandedPermissionView: View {
                             Image(systemName: selectedOption == idx ? "checkmark.circle.fill" : "circle")
                                 .font(.system(size: 12))
                                 .foregroundStyle(selectedOption == idx
-                                    ? Color(red: 249/255, green: 93/255, blue: 2/255)
-                                    : Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.2))
-                            Text(label)
-                                .font(Constants.body(size: 12, weight: .medium))
-                                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
+                                    ? Constants.orangePrimary
+                                    : Constants.textPrimary.opacity(0.2))
+                                Text(label)
+                                .font(Constants.fontCallout)
+                                .foregroundStyle(Constants.textPrimary)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 12)
+                        .padding(.vertical, Constants.spacingTight)
+                        .padding(.horizontal, Constants.spacingNormal)
                         .frame(maxWidth: .infinity)
                         .background(selectedOption == idx
-                            ? Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.06)
-                            : Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.02))
+                            ? Constants.orangePrimary.opacity(0.06)
+                            : Constants.textPrimary.opacity(0.02))
                         .contentShape(Rectangle())
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     }
                     .buttonStyle(.plain)
 
@@ -470,21 +506,21 @@ struct ExpandedPermissionView: View {
                 TextEditor(text: $feedbackText)
                     .focused($feedbackFocused)
                     .font(.system(size: 13))
-                    .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255))
+                    .foregroundStyle(Constants.textPrimary)
                     .scrollContentBackground(.hidden)
                     .padding(10)
                     .frame(minHeight: 60, maxHeight: 120)
-                    .background(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.03))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(Constants.textPrimary.opacity(0.03))
+                    .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(red: 249/255, green: 93/255, blue: 2/255).opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
+                            .stroke(Constants.orangePrimary.opacity(0.2), lineWidth: 1)
                     )
                     .overlay(alignment: .topLeading) {
                         if feedbackText.isEmpty {
                             Text("Tell Claude what to change...")
                                 .font(.system(size: 13))
-                                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.3))
+                                .foregroundStyle(Constants.textPrimary.opacity(0.3))
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
                                 .allowsHitTesting(false)
@@ -503,19 +539,20 @@ struct ExpandedPermissionView: View {
             if !permission.permissionSuggestions.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(Array(permission.permissionSuggestions.enumerated()), id: \.element.id) { _, suggestion in
-                        Button {
-                            onAllowWithPermissions?([suggestion])
-                            onClose()
-                        } label: {
+            Button {
+                cancelAutoAllowTimer()
+                onDecision(.deny)
+                onClose()
+            } label: {
                             Text(suggestion.displayLabel)
-                                .font(Constants.body(size: 12, weight: .medium))
-                                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.5))
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 12)
+                                .font(Constants.fontCallout)
+                                .foregroundStyle(Constants.textPrimary.opacity(0.5))
+                                .padding(.vertical, Constants.spacingTight)
+                                .padding(.horizontal, Constants.spacingNormal)
                                 .contentShape(Rectangle())
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12), lineWidth: 1))
+                                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
+                                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
+                                    .stroke(Constants.textPrimary.opacity(0.12), lineWidth: 1))
                         }
                         .buttonStyle(.plain)
                     }
@@ -525,6 +562,121 @@ struct ExpandedPermissionView: View {
 
             actionButtons
         }
+    }
+
+    // MARK: - Auto-Allow Row
+
+    private var autoAllowRow: some View {
+        VStack(spacing: 8) {
+            // Checkbox row: global left, session right
+            HStack {
+                // Left: global auto-allow
+                Button {
+                    autoAllowEnabled.toggle()
+                    pendingPermissionStore.setGlobalAutoAllow(autoAllowEnabled)
+                    if autoAllowEnabled {
+                        startAutoAllowTimer()
+                    } else {
+                        cancelAutoAllowTimer()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: autoAllowEnabled ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 14))
+                            .foregroundStyle(autoAllowEnabled ? Constants.orangePrimary : Constants.textMuted)
+
+                        Text("Auto-allow")
+                            .font(Constants.fontBody)
+                            .foregroundStyle(Constants.textPrimary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Countdown text when enabled
+                if isCountdownActive {
+                    Text("\(Int(ceil(autoAllowRemainingSeconds)))s")
+                        .font(Constants.fontCallout)
+                        .foregroundStyle(Constants.textMuted)
+                        .monospacedDigit()
+                }
+
+                Spacer()
+
+                // Right: session auto-allow
+                if let sessionId = permission.event.sessionId {
+                    HStack(spacing: 8) {
+                        Text("This session")
+                            .font(Constants.fontBody)
+                            .foregroundStyle(Constants.textPrimary)
+
+                        Button {
+                            let newValue = !pendingPermissionStore.isSessionAutoAllow(sessionId)
+                            pendingPermissionStore.setSessionAutoAllow(sessionId, enabled: newValue)
+                            if newValue {
+                                if !isCountdownActive {
+                                    startAutoAllowTimer()
+                                }
+                            } else {
+                                cancelAutoAllowTimer()
+                            }
+                        } label: {
+                            Image(systemName: pendingPermissionStore.isSessionAutoAllow(sessionId) ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 14))
+                                .foregroundStyle(pendingPermissionStore.isSessionAutoAllow(sessionId) ? Constants.orangePrimary : Constants.textMuted)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            // Progress bar when enabled
+            if isCountdownActive {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Constants.border)
+                            .frame(height: 4)
+
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Constants.orangePrimary)
+                            .frame(width: geometry.size.width * (autoAllowRemainingSeconds / 5.0), height: 4)
+                    }
+                }
+                .frame(height: 4)
+            }
+        }
+    }
+
+    private func startAutoAllowTimer() {
+        isCountdownActive = true
+        autoAllowStartDate = Date()
+        autoAllowRemainingSeconds = 5.0
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            Task { @MainActor in
+                guard isCountdownActive else { return }
+                if let startDate = autoAllowStartDate {
+                    let elapsed = Date().timeIntervalSince(startDate)
+                    let remaining = max(0, 5.0 - elapsed)
+                    autoAllowRemainingSeconds = remaining
+
+                    if remaining <= 0 {
+                        cancelAutoAllowTimer()
+                        performApprove()
+                    }
+                }
+            }
+        }
+    }
+
+    private func cancelAutoAllowTimer() {
+        autoAllowTimer?.invalidate()
+        autoAllowTimer = nil
+        autoAllowStartDate = nil
+        isCountdownActive = false
+        autoAllowRemainingSeconds = 5.0
     }
 
     // MARK: - Shared Action Buttons (Plan + Standard)
@@ -551,7 +703,7 @@ struct ExpandedPermissionView: View {
         HStack(spacing: 10) {
             Text("⌘P close  ·  ⌘⎋ deny  ·  ⌘↵ approve")
                 .font(.system(size: 8, weight: .medium, design: .rounded))
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.35))
+                .foregroundStyle(Constants.textPrimary.opacity(0.35))
 
             Spacer()
 
@@ -561,32 +713,35 @@ struct ExpandedPermissionView: View {
             } label: {
                 HStack(spacing: 5) {
                     Text("Deny")
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                     if showShortcuts { ActionBadge(label: "⌘⎋") }
                 }
-                .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.5))
-                .padding(.vertical, 8)
+                .foregroundStyle(Constants.textPrimary.opacity(0.5))
+                .padding(.vertical, Constants.spacingTight)
                 .padding(.horizontal, 20)
                 .contentShape(Rectangle())
-                .overlay(RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.12), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
+                    .stroke(Constants.textPrimary.opacity(0.12), lineWidth: 1))
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.escape, modifiers: .command)
 
-            Button { performApprove() } label: {
+            Button { 
+                cancelAutoAllowTimer()
+                performApprove() 
+            } label: {
                 HStack(spacing: 5) {
                     Text(isPlan ? "Approve" : "Allow")
-                        .font(Constants.heading(size: 13, weight: .semibold))
+                        .font(Constants.fontHeadline)
                     if showShortcuts { ActionBadge(label: "⌘↵") }
                 }
                 .foregroundStyle(.white)
-                .padding(.vertical, 8)
+                .padding(.vertical, Constants.spacingTight)
                 .padding(.horizontal, 20)
                 .background(isPlan && selectedOption == 3 && feedbackText.isEmpty
-                    ? Color.gray.opacity(0.3)
-                    : Color(red: 249/255, green: 93/255, blue: 2/255))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                    ? Constants.border
+                    : Constants.orangePrimary)
+                .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.return, modifiers: .command)

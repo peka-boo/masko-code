@@ -11,10 +11,10 @@ struct SessionSwitcherView: View {
             VStack(alignment: .leading, spacing: 0) {
                 if store.sessions.isEmpty {
                     Text("No active sessions")
-                        .font(Constants.body(size: 11))
+                        .font(Constants.fontSubheadline)
                         .foregroundStyle(Constants.textMuted)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, Constants.spacingNormal)
+                        .padding(.vertical, Constants.spacingNormal)
                 } else {
                     ForEach(Array(store.sessions.enumerated()), id: \.element.id) { index, session in
                         SessionSwitcherRow(
@@ -36,12 +36,12 @@ struct SessionSwitcherView: View {
                 Divider()
                 Text("⌘⌘ switch · ⌘↵ focus · esc cancel")
                     .font(.system(size: 8, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(red: 35/255, green: 17/255, blue: 60/255).opacity(0.35))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .foregroundStyle(Constants.textPrimary.opacity(0.35))
+                    .padding(.horizontal, Constants.spacingNormal)
+                    .padding(.vertical, Constants.spacingTight)
             }
             .animation(.easeInOut(duration: 0.15), value: hotkeyManager.isCmdHeld)
-            .background(Color.white)
+            .background(Constants.surfaceWhite)
             .clipShape(RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall))
             .overlay(
                 RoundedRectangle(cornerRadius: Constants.cornerRadiusSmall)
@@ -74,7 +74,7 @@ private struct SessionSwitcherRow: View {
             // Project name + phase
             VStack(alignment: .leading, spacing: 1) {
                 Text(projectLabel)
-                    .font(Constants.body(size: 11, weight: .medium))
+                    .font(Constants.fontSubheadline.weight(.medium))
                     .foregroundStyle(Constants.textPrimary)
                     .lineLimit(1)
 
@@ -85,7 +85,7 @@ private struct SessionSwitcherRow: View {
                         Text(ago)
                     }
                 }
-                .font(Constants.body(size: 9))
+                .font(Constants.fontFootnote)
                 .foregroundStyle(Constants.textMuted)
             }
 
@@ -100,8 +100,8 @@ private struct SessionSwitcherRow: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 7)
+            .padding(.horizontal, Constants.spacingTight)
+            .padding(.vertical, Constants.spacingTight)
         .background(isSelected ? Constants.orangePrimarySubtle : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
@@ -118,7 +118,7 @@ private struct SessionSwitcherRow: View {
     private var phaseColor: Color {
         switch session.phase {
         case .running: return .green
-        case .idle: return Color(red: 160/255, green: 160/255, blue: 170/255)
+        case .idle: return Constants.textMuted
         case .compacting: return .purple
         }
     }

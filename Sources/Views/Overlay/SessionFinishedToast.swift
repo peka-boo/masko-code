@@ -14,12 +14,12 @@ struct SessionFinishedToastView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(toast.projectName)
-                        .font(Constants.heading(size: 12, weight: .bold))
+                        .font(Constants.fontCallout.weight(.bold))
                         .foregroundStyle(Constants.textPrimary)
                         .lineLimit(1)
 
                     Text("Task completed")
-                        .font(Constants.body(size: 10, weight: .medium))
+                        .font(Constants.fontFootnote.weight(.medium))
                         .foregroundStyle(Constants.textMuted)
                 }
 
@@ -29,9 +29,9 @@ struct SessionFinishedToastView: View {
                     .font(.system(size: 8, weight: .medium, design: .rounded))
                     .foregroundStyle(Constants.textMuted)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.white)
+            .padding(.horizontal, Constants.spacingLoose)
+            .padding(.vertical, Constants.spacingTight)
+            .background(Constants.surfaceWhite)
             .overlay(alignment: .bottom) {
                 GeometryReader { geo in
                     Constants.orangePrimary

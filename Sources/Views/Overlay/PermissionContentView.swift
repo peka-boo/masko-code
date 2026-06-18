@@ -155,14 +155,16 @@ struct PermissionContentView: View {
                     .foregroundStyle(OverlayStyle.textPrimary)
             }
 
-            if isExpanded, let project = projectName {
+            if let project = projectName {
                 Text(project)
-                    .font(.system(size: 12))
-                    .foregroundStyle(OverlayStyle.textPrimary.opacity(0.4))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(OverlayStyle.textPrimary.opacity(0.05))
+                    .font(.system(size: isExpanded ? 12 : 10))
+                    .foregroundStyle(OverlayStyle.textPrimary.opacity(0.55))
+                    .padding(.horizontal, isExpanded ? 8 : 6)
+                    .padding(.vertical, isExpanded ? 2 : 1)
+                    .background(OverlayStyle.textPrimary.opacity(0.06))
                     .clipShape(Capsule())
+                    .lineLimit(1)
+                    .help(permission.event.cwd ?? project)
             }
 
             Spacer()
@@ -1005,9 +1007,12 @@ struct PermissionContentView: View {
     }
 
     private var projectName: String? {
-        guard let sessionId = permission.event.sessionId,
-              let session = sessionStore.sessions.first(where: { $0.id == sessionId }) else { return nil }
-        return session.projectName
+        if let sessionId = permission.event.sessionId,
+           let session = sessionStore.sessions.first(where: { $0.id == sessionId }),
+           let name = session.projectName {
+            return name
+        }
+        return permission.event.projectName
     }
 
     // MARK: - Auto-Allow Timer

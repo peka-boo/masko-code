@@ -28,6 +28,7 @@ final class PermissionInteractionState {
     // Auto-allow
     var autoAllowEnabled: Bool = false  // global checkbox state
     var isCountdownActive: Bool = false // whether countdown bar is running
+    var isHoverPaused: Bool = false     // countdown paused due to mouse hover
     var autoAllowRemainingSeconds: Double = 5.0
     var autoAllowTimer: Timer?
     var autoAllowStartDate: Date?

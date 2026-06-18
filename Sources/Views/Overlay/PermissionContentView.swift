@@ -24,6 +24,7 @@ struct PermissionContentView: View {
 
     @FocusState private var feedbackFocused: Bool
     @FocusState private var otherFieldFocused: String?
+    @AppStorage("autoAllowDelaySeconds") private var delaySeconds: Double = 5.0
 
     private var state: PermissionInteractionState { store.interactionState(for: permission.id) }
 
@@ -84,6 +85,13 @@ struct PermissionContentView: View {
         }
         .onDisappear {
             cancelAutoAllowTimer()
+        }
+        .onHover { hovering in
+            if hovering {
+                pauseForHover()
+            } else {
+                resumeFromHover()
+            }
         }
         .onChange(of: hotkeyManager.selectedButtonIndex) { _, newIdx in
             guard showShortcuts || isExpanded, let idx = newIdx else { return }
@@ -690,6 +698,25 @@ struct PermissionContentView: View {
 
     private var standardActionsView: some View {
         VStack(spacing: isExpanded ? 10 : 3) {
+            // Delay slider row (global setting, persisted)
+            HStack(spacing: 8) {
+                Image(systemName: "timer")
+                    .font(.system(size: isExpanded ? 12 : 10))
+                    .foregroundStyle(OverlayStyle.textMuted)
+
+                Slider(value: $delaySeconds, in: 1...5, step: 1) { editing in
+                    if !editing && state.isCountdownActive {
+                        startAutoAllowTimer()
+                    }
+                }
+                .tint(OverlayStyle.orange)
+
+                Text("\(Int(delaySeconds))s")
+                    .font(Constants.fontFootnote.monospacedDigit())
+                    .foregroundStyle(OverlayStyle.textPrimary)
+                    .frame(width: 24, alignment: .trailing)
+            }
+
             // Auto-allow row (global, 5s countdown)
             // Auto-allow toggles row: global left, session right
             HStack {
@@ -753,7 +780,7 @@ struct PermissionContentView: View {
 
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(OverlayStyle.orange)
-                                .frame(width: geometry.size.width * (state.autoAllowRemainingSeconds / 5.0), height: 3)
+                                .frame(width: geometry.size.width * (state.autoAllowRemainingSeconds / store.globalAutoAllowDelaySeconds), height: 3)
                         }
                     }
                     .frame(height: 3)
@@ -987,15 +1014,21 @@ struct PermissionContentView: View {
 
     private func startAutoAllowTimer() {
         state.isCountdownActive = true
+        state.isHoverPaused = false
         state.autoAllowStartDate = Date()
-        state.autoAllowRemainingSeconds = 5.0
+        state.autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
+        startTimerTicks()
+    }
+
+    private func startTimerTicks() {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor in
-                guard state.isCountdownActive else { return }
+                guard state.isCountdownActive, !state.isHoverPaused else { return }
                 if let startDate = state.autoAllowStartDate {
                     let elapsed = Date().timeIntervalSince(startDate)
-                    let remaining = max(0, 5.0 - elapsed)
+                    let total = store.globalAutoAllowDelaySeconds
+                    let remaining = max(0, total - elapsed)
                     state.autoAllowRemainingSeconds = remaining
 
                     if remaining <= 0 {
@@ -1007,11 +1040,29 @@ struct PermissionContentView: View {
         }
     }
 
+    private func pauseForHover() {
+        guard state.isCountdownActive, !state.isHoverPaused else { return }
+        state.autoAllowTimer?.invalidate()
+        state.autoAllowTimer = nil
+        state.isHoverPaused = true
+    }
+
+    private func resumeFromHover() {
+        guard state.isHoverPaused else { return }
+        state.isHoverPaused = false
+        let total = store.globalAutoAllowDelaySeconds
+        let remaining = min(state.autoAllowRemainingSeconds, total)
+        state.autoAllowRemainingSeconds = remaining
+        state.autoAllowStartDate = Date().addingTimeInterval(remaining - total)
+        startTimerTicks()
+    }
+
     private func cancelAutoAllowTimer() {
         state.autoAllowTimer?.invalidate()
         state.autoAllowTimer = nil
         state.autoAllowStartDate = nil
         state.isCountdownActive = false
-        state.autoAllowRemainingSeconds = 5.0
+        state.isHoverPaused = false
+        state.autoAllowRemainingSeconds = store.globalAutoAllowDelaySeconds
     }
 }

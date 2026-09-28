@@ -34,6 +34,16 @@ cp "$PROJECT_ROOT/Info.plist" "$APP_PATH/Contents/Info.plist"
 echo "📋 Copying resources..."
 cp -R "$PROJECT_ROOT/Sources/Resources/"* "$APP_PATH/Contents/Resources/"
 
+# Step 5b: Copy SwiftPM-generated resource bundle (required by Bundle.module)
+SPM_BUNDLE="$BUILD_DIR/release/masko-code_masko-code.bundle"
+if [ -d "$SPM_BUNDLE" ]; then
+    echo "📋 Copying SwiftPM resource bundle..."
+    cp -R "$SPM_BUNDLE" "$APP_PATH/Contents/Resources/"
+else
+    echo "❌ ERROR: SwiftPM resource bundle not found at $SPM_BUNDLE" >&2
+    exit 1
+fi
+
 # Step 6: Copy Sparkle framework (for auto-updates)
 echo "📋 Copying Sparkle framework..."
 mkdir -p "$APP_PATH/Contents/Frameworks"

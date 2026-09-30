@@ -5,6 +5,27 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationService()
     private var isAvailable = false
 
+    private let defaults = UserDefaults.standard
+
+    /// UserDefaults key for the master "system notifications" switch
+    static let masterKey = "systemNotificationsEnabled"
+
+    /// UserDefaults key for a per-category switch
+    static func categoryKey(_ category: NotificationCategory) -> String {
+        "systemNotificationCategory.\(category.rawValue)"
+    }
+
+    /// Master switch — default ON
+    var isMasterEnabled: Bool {
+        defaults.object(forKey: Self.masterKey) as? Bool ?? true
+    }
+
+    /// Per-category switch (implies master) — default ON
+    func isCategoryEnabled(_ category: NotificationCategory) -> Bool {
+        isMasterEnabled
+            && (defaults.object(forKey: Self.categoryKey(category)) as? Bool ?? true)
+    }
+
     private override init() {
         super.init()
     }
@@ -26,7 +47,7 @@ final class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     }
 
     func show(_ notification: AppNotification) async {
-        guard isAvailable else { return }
+        guard isAvailable, isCategoryEnabled(notification.category) else { return }
 
         let content = UNMutableNotificationContent()
         content.title = notification.title

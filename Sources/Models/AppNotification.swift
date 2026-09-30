@@ -13,6 +13,38 @@ enum NotificationCategory: String, Codable, CaseIterable {
     case system
 }
 
+extension NotificationCategory {
+    var displayName: String {
+        switch self {
+        case .permissionRequest: "Permission Requests"
+        case .idleAlert: "Idle Alerts"
+        case .elicitationDialog: "Input Requests"
+        case .sessionLifecycle: "Session Lifecycle"
+        case .taskCompleted: "Task Completed"
+        case .toolFailed: "Tool Failures"
+        case .generationComplete: "Generation Complete"
+        case .generationFailed: "Generation Failed"
+        case .auth: "Authentication"
+        case .system: "System"
+        }
+    }
+
+    var detailText: String {
+        switch self {
+        case .permissionRequest: "Assistant needs approval to run a tool"
+        case .idleAlert: "Assistant has been waiting for you"
+        case .elicitationDialog: "Assistant asked a question"
+        case .sessionLifecycle: "Sessions started, ended, or finished"
+        case .taskCompleted: "A task finished running"
+        case .toolFailed: "A tool call failed"
+        case .generationComplete: "Mascot generation finished"
+        case .generationFailed: "Mascot generation failed"
+        case .auth: "Sign-in and authorization events"
+        case .system: "App-level system messages"
+        }
+    }
+}
+
 enum NotificationPriority: String, Codable {
     case low, normal, high, urgent
 }

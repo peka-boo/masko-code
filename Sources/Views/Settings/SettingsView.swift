@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var ideExtensionInstalled = false
     @State private var ideStatuses: [ExtensionInstaller.IDEStatus] = []
     @AppStorage("ideExtensionEnabled") private var ideExtensionEnabled = true
+    @AppStorage(NotificationService.masterKey) private var systemNotificationsEnabled = true
     @State private var extensionError: String?
     @State private var extensionBusy = false
     @State private var installingIDE: String?  // command of IDE currently being installed
@@ -21,6 +22,15 @@ struct SettingsView: View {
 
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown"
+    }
+
+    /// Per-category toggle backed by UserDefaults (default ON for every category)
+    private func categoryBinding(_ category: NotificationCategory) -> Binding<Bool> {
+        let key = NotificationService.categoryKey(category)
+        return Binding(
+            get: { UserDefaults.standard.object(forKey: key) as? Bool ?? true },
+            set: { UserDefaults.standard.set($0, forKey: key) }
+        )
     }
 
     private var buildNumber: String {
@@ -262,6 +272,28 @@ struct SettingsView: View {
             }
             .animation(.easeInOut(duration: 0.25), value: ideExtensionInstalled)
             .animation(.easeInOut(duration: 0.25), value: extensionBusy)
+
+            Section {
+                Toggle("Enable System Notifications", isOn: $systemNotificationsEnabled)
+                    .foregroundColor(Constants.textPrimary)
+
+                if systemNotificationsEnabled {
+                    ForEach(NotificationCategory.allCases, id: \.rawValue) { category in
+                        Toggle(isOn: categoryBinding(category)) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(category.displayName)
+                                    .foregroundColor(Constants.textPrimary)
+                                Text(category.detailText)
+                                    .font(Constants.fontFootnote)
+                                    .foregroundColor(Constants.textMuted)
+                            }
+                        }
+                    }
+                }
+            } header: {
+                Text("System Notifications").font(Constants.fontHeadline)
+            }
+            .animation(.easeInOut(duration: 0.25), value: systemNotificationsEnabled)
 
             Section {
                 HStack {

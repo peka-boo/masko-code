@@ -3,7 +3,7 @@ import XCTest
 
 @MainActor
 final class EventProcessorTests: XCTestCase {
-    func testCodexPermissionNotificationUsesEventMessage() async throws {
+    func testCodexPermissionNotificationIsNotAddedToDashboard() async throws {
         let eventStore = EventStore()
         eventStore.clear()
         let sessionStore = SessionStore()
@@ -28,12 +28,10 @@ final class EventProcessorTests: XCTestCase {
 
         await processor.process(event)
 
-        let notification = try XCTUnwrap(notificationStore.notifications.first(where: { $0.sessionId == sessionId }))
-        XCTAssertEqual(notification.title, "Permission Requested")
-        XCTAssertEqual(notification.body, "Need network access to push")
+        XCTAssertNil(notificationStore.notifications.first(where: { $0.sessionId == sessionId }))
     }
 
-    func testClaudePermissionNotificationUsesEventMessage() async throws {
+    func testClaudePermissionNotificationIsNotAddedToDashboard() async throws {
         let eventStore = EventStore()
         eventStore.clear()
         let sessionStore = SessionStore()
@@ -58,9 +56,7 @@ final class EventProcessorTests: XCTestCase {
 
         await processor.process(event)
 
-        let notification = try XCTUnwrap(notificationStore.notifications.first(where: { $0.sessionId == sessionId }))
-        XCTAssertEqual(notification.title, "Permission Requested")
-        XCTAssertEqual(notification.body, "Need approval to run Bash")
+        XCTAssertNil(notificationStore.notifications.first(where: { $0.sessionId == sessionId }))
     }
 
     func testCodexQuestionStopStillCreatesCompletionNotificationWhenProcessed() async throws {

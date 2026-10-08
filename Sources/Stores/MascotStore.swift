@@ -104,7 +104,7 @@ final class MascotStore {
     }
 
     static func loadBundledConfig(named filename: String) -> MaskoAnimationConfig? {
-        guard let url = Bundle.module.url(forResource: filename, withExtension: "json", subdirectory: "Defaults"),
+        guard let url = AppResources.url(forResource: filename, withExtension: "json", subdirectory: "Defaults"),
               let data = try? Data(contentsOf: url),
               let config = try? JSONDecoder().decode(MaskoAnimationConfig.self, from: data) else { return nil }
         return config

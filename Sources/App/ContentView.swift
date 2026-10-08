@@ -41,7 +41,7 @@ struct ContentView: View {
         NavigationSplitView {
             VStack(alignment: .leading, spacing: Constants.spacingTight) {
                 HStack(spacing: 8) {
-                    if let url = Bundle.module.url(forResource: "logo", withExtension: "png", subdirectory: "Images"),
+                    if let url = AppResources.url(forResource: "logo", withExtension: "png", subdirectory: "Images"),
                        let nsImage = NSImage(contentsOf: url) {
                         Image(nsImage: nsImage)
                             .resizable()

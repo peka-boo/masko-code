@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "Rubik-Regular", "Rubik-Medium", "Rubik-SemiBold"
         ]
         for name in fontNames {
-            if let url = Bundle.module.url(forResource: name, withExtension: "ttf", subdirectory: "Fonts") {
+            if let url = AppResources.url(forResource: name, withExtension: "ttf", subdirectory: "Fonts") {
                 CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
                 continue
             }
@@ -203,7 +203,7 @@ struct MaskoDesktopApp: App {
                 .environment(overlayManager)
                 .environment(appUpdater)
         } label: {
-            if let url = Bundle.module.url(forResource: "logo", withExtension: "png", subdirectory: "Images"),
+            if let url = AppResources.url(forResource: "logo", withExtension: "png", subdirectory: "Images"),
                let nsImage = NSImage(contentsOf: url) {
                 let resized = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { rect in
                     nsImage.draw(in: rect)

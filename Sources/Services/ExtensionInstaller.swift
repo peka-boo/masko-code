@@ -364,9 +364,7 @@ enum ExtensionInstaller {
     }
 
     private static func bundledVSIXPath() -> String {
-        // SPM Bundle.module resources (auto-generated accessor for .copy() resources)
-        let moduleBundle = Bundle.module
-        if let url = moduleBundle.url(forResource: "masko-terminal-focus", withExtension: "vsix", subdirectory: "Extensions") {
+        if let url = AppResources.url(forResource: "masko-terminal-focus", withExtension: "vsix", subdirectory: "Extensions") {
             return url.path
         }
         // Main app bundle fallback
@@ -488,8 +486,7 @@ enum ExtensionInstaller {
 
     /// Path to the bundled JetBrains plugin zip
     private static func bundledJetBrainsPluginPath() -> String {
-        let moduleBundle = Bundle.module
-        if let url = moduleBundle.url(forResource: "masko-terminal-focus-jetbrains", withExtension: "zip", subdirectory: "Extensions") {
+        if let url = AppResources.url(forResource: "masko-terminal-focus-jetbrains", withExtension: "zip", subdirectory: "Extensions") {
             return url.path
         }
         if let path = Bundle.main.path(forResource: "masko-terminal-focus-jetbrains", ofType: "zip") {

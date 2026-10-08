@@ -29,7 +29,10 @@ jobs:
         run: swift test
 
       - name: Install DMG dependencies
-        run: python3 -m pip install --user pillow
+        run: |
+          python3 -m venv .venv-dmg
+          .venv-dmg/bin/pip install pillow
+          echo "$PWD/.venv-dmg/bin" >> "$GITHUB_PATH"
 
       - name: Build app and DMG
         run: bash scripts/build-app.sh

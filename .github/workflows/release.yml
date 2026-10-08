@@ -1,0 +1,65 @@
+name: Release macOS build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        required: true
+        default: v0.14.6
+      release_name:
+        description: Release title
+        required: true
+        default: v0.14.6 - pekaboo fork
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test
+        run: swift test
+
+      - name: Build app and DMG
+        run: bash scripts/build-app.sh
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir artifacts
+          mv "Masko Code.dmg" artifacts/Masko.Code.dmg
+          ditto -c -k --keepParent ".build/Masko Code.app" artifacts/Masko.Code.app.zip
+          shasum -a 256 artifacts/Masko.Code.dmg artifacts/Masko.Code.app.zip > artifacts/SHA256SUMS
+
+      - name: Verify app signature
+        run: |
+          codesign --verify --deep --strict --verbose=2 ".build/Masko Code.app"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_NAME: ${{ inputs.release_name }}
+        run: |
+          notes="Masko Code ${RELEASE_TAG#v}
+
+          Commit: ${GITHUB_SHA}
+
+          Built from ${GITHUB_REF_NAME}.
+          The app is ad-hoc signed and has not been notarized."
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"; then
+            gh release upload "$RELEASE_TAG" artifacts/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" artifacts/* \
+              --target "$GITHUB_SHA" \
+              --title "$RELEASE_NAME" \
+              --notes "$notes" \
+              --repo "$GITHUB_REPOSITORY"
+          fi

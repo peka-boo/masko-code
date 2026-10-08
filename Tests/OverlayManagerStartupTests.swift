@@ -65,7 +65,8 @@ final class OverlayManagerStartupTests: XCTestCase {
                     conditions: nil,
                     videos: MaskoAnimationVideos(webm: nil, hevc: nil),
                     priority: nil,
-                    speed: nil
+                    speed: nil,
+                    sound: nil
                 ),
             ],
             inputs: nil

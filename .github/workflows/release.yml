@@ -28,6 +28,9 @@ jobs:
       - name: Test
         run: swift test
 
+      - name: Install DMG dependencies
+        run: python3 -m pip install --user pillow
+
       - name: Build app and DMG
         run: bash scripts/build-app.sh
 
